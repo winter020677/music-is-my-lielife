@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  api:
+    build: ./api
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./api:/app
+    env_file:
+      - ./api/.env
+    depends_on:
+      - db
+      - cache
+
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: tester
+      POSTGRES_PASSWORD: tester
+      POSTGRES_DB: music_db
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  cache:
+    image: redis:7
+    ports:
+      - "6379:6379"
+    
+volumes:
+  postgres_data:
+
+
+   
