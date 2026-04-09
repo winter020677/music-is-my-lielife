@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 
 from sqlalchemy import Column, DateTime, Integer, String
 from sqlalchemy.ext.declarative import declarative_base
@@ -15,4 +15,4 @@ class Song(Base):
     listened_at = Column(DateTime)
     mood = Column(String)
     favorite_part = Column(String, nullable=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=lamda: datetime.now(timezone.utc))
