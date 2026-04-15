@@ -17,9 +17,9 @@ def get_track_features(title: str, artist: str):
     tracks = results["tracks"]["items"]
     if not tracks:
         return None
-    track = sp.track(tracks[0]["id"])
+    track = sp.track(track_id)
     artist_id = track["artists"][0]["id"]
-    artist_info = sp.artist(artist_id)
+    artist = sp.artist(artist_id)
 
     return {
         "title": track["name"],
@@ -27,5 +27,5 @@ def get_track_features(title: str, artist: str):
         "album": track["album"]["name"],
         "popularity": track["popularity"],
         "duration_ms": track["duration_ms"],
-        "genres": artist_info["genres"],
+        "genres": artist["genres"],
     }
