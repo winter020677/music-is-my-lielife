@@ -15,4 +15,4 @@ class Song(Base):
     listened_at = Column(DateTime)
     mood = Column(String)
     favorite_part = Column(String, nullable=True)
-    created_at = Column(DateTime, default=lamda: datetime.now(timezone.utc))
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))

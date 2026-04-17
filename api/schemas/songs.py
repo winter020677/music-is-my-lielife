@@ -9,4 +9,4 @@ class SongSchema(BaseModel):
     artist: str
     listened_at: datetime
     mood: Optional[str] = None
-    favorite_part: Optional[str] = Nofrom schemas.songs import SongScheman
+    favorite_part: Optional[str] = None
