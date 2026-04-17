@@ -2,7 +2,7 @@ from database import get_db
 from fastapi import APIRouter, Depends
 from models.songs import Song
 from schemas.songs import SongSchema
-from services.spotify import get_track_features
+from services.spotify import get_recommendations, get_track_features
 from sqlalchemy.orm import Session
 
 router = APIRouter()
@@ -33,3 +33,11 @@ def get_songs(db: Session = Depends(get_db)):
 def get_features(title: str, artist: str):
     features = get_track_features(title, artist)
     return {"features": features}
+
+
+@router.get("/songs/recommend")
+def recommend_songs(title: str, artist: str, limit: int = 5):
+    recs = get_recommendations(title, artist, limit)
+    if recs is None:
+        return {"error": "song not found"}
+    return {"recommendations": recs}
