@@ -1,7 +1,9 @@
-  fastapi
-  uvicorn
-  spotipy 
-  sqlalchemy
-  psycopg2-binary
-  redis
-  python-dotenv
+fastapi
+uvicorn
+spotipy 
+sqlalchemy
+psycopg2-binary
+redis
+python-dotenv
+pytest
+httpx

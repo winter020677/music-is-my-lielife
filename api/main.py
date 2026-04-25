@@ -1,5 +1,7 @@
 """application entry point"""
 
+from contextlib import asynccontextmanager
+
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -10,7 +12,14 @@ from fastapi.middleware.cors import CORSMiddleware
 from models.songs import Base
 from routes import songs
 
-app = FastAPI()
+
+@asynccontextmanager
+async def lifespan(app):
+    Base.metadata.create_all(bind=engine)
+    yield
+
+
+app = FastAPI(lifespan=lifespan)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -18,4 +27,3 @@ app.add_middleware(
     allow_headers=["*"],
 )
 app.include_router(songs.router)
-Base.metadata.create_all(bind=engine)
