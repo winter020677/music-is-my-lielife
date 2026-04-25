@@ -11,15 +11,17 @@ export default function SongForm() {
     favorite_part: "",
   });
 
+  const [loading, setLoading] = useState(false);
+
   function handleChange(
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) {
     setForm({ ...form, [e.target.name]: e.target.value });
   }
-
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    await fetch("http://localhost:8000/songs/log", {
+    setLoading(true);
+    const res = await fetch("http://localhost:8000/songs/log", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -27,8 +29,11 @@ export default function SongForm() {
         listened_at: new Date(form.listened_at).toISOString(),
       }),
     });
+    setLoading(false);
+    alert("記録完了");
+    // console.log("submit fired", form);
+    // console.log("response", res.status);
   }
-
   return (
     <form onSubmit={handleSubmit}>
       <input
@@ -64,7 +69,9 @@ export default function SongForm() {
         onChange={handleChange}
         placeholder="お気に入りのパート（任意）"
       />
-      <button type="submit">記録する</button>
+      <button type="submit" disabled={loading}>
+        {loading ? "送信中..." : "記録する"}
+      </button>
     </form>
   );
 }
