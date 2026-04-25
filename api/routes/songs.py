@@ -1,3 +1,5 @@
+from collections import Counter
+
 from database import get_db
 from fastapi import APIRouter, Depends
 from models.songs import Song
@@ -41,3 +43,11 @@ def recommend_songs(title: str, artist: str, limit: int = 5):
     if recs is None:
         return {"error": "song not found"}
     return {"recommendations": recs}
+
+
+@router.get("/songs/analysis")
+def analysis_songs(db: Session = Depends(get_db)):
+    songs = db.query(Song).all()
+    moods = [song.mood for song in songs if song.mood]
+    counts = Counter(moods)
+    return {"mood_analysis": counts.most_common()}
