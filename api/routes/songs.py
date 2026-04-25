@@ -12,6 +12,7 @@ router = APIRouter()
 
 @router.post("/songs/log")
 def log_song(song: SongSchema, db: Session = Depends(get_db)):
+    """post input song log"""
     db_song = Song(
         title=song.title,
         artist=song.artist,
@@ -27,18 +28,21 @@ def log_song(song: SongSchema, db: Session = Depends(get_db)):
 
 @router.get("/songs")
 def get_songs(db: Session = Depends(get_db)):
+    """get song log data from db"""
     songs = db.query(Song).all()
     return songs
 
 
 @router.get("/songs/features")
 def get_features(title: str, artist: str):
+    """get track metadata from spotify"""
     features = get_track_features(title, artist)
     return {"features": features}
 
 
 @router.get("/songs/recommend")
 def recommend_songs(title: str, artist: str, limit: int = 5):
+    """return song recommendations based on genre"""
     recs = get_recommendations(title, artist, limit)
     if recs is None:
         return {"error": "song not found"}

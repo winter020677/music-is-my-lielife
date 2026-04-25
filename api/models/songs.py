@@ -1,3 +1,5 @@
+"""SQLAlchemy ORM model for the songs table."""
+
 from datetime import datetime, timezone
 
 from sqlalchemy import Column, DateTime, Integer, String
@@ -15,4 +17,5 @@ class Song(Base):
     listened_at = Column(DateTime)
     mood = Column(String)
     favorite_part = Column(String, nullable=True)
+    # Times are stored in UTC for frontend conversion.
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
