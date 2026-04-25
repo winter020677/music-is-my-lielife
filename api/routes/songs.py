@@ -55,3 +55,13 @@ def analysis_songs(db: Session = Depends(get_db)):
     moods = [song.mood for song in songs if song.mood]
     counts = Counter(moods)
     return {"mood_analysis": counts.most_common()}
+
+
+@router.delete("/songs/{song_id}")
+def delete_song(song_id: int, db: Session = Depends(get_db)):
+    song = db.query(Song).filter(Song.id == song_id).first()
+    if not song:
+        return {"error": "not found"}
+    db.delete(song)
+    db.commit()
+    return {"ok": True}
