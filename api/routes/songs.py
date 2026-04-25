@@ -65,3 +65,29 @@ def delete_song(song_id: int, db: Session = Depends(get_db)):
     db.delete(song)
     db.commit()
     return {"ok": True}
+
+
+@router.get("/songs/mood-trend")
+def mood_trend(db: Session = Depends(get_db)):
+    songs = db.query(Song).all()
+    MOOD_GROUPS = {
+        "positive": ["happy", "calm"],
+        "negative": ["sad", "tired"],
+        "neutral": ["neutral"],
+    }
+    result = []
+    for song in songs:
+        if not song.mood:
+            continue
+        group = "neutral"
+        for g, moods in MOOD_GROUPS.items():
+            if song.mood in moods:
+                group = g
+                break
+        result.append(
+            {
+                "listened_at": song.listened_at,
+                "group": group,
+            }
+        )
+    return {"trend": result}
