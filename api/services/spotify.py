@@ -1,3 +1,5 @@
+"""connecting for spotify api"""
+
 import json
 import os
 
@@ -5,6 +7,7 @@ import spotipy
 from services.cache import r
 from spotipy.oauth2 import SpotifyClientCredentials
 
+# credentials loaded from env vars to avoid hardcoding secrets
 sp = spotipy.Spotify(
     auth_manager=SpotifyClientCredentials(
         client_id=os.getenv("SPOTIFY_CLIENT_ID"),
@@ -14,10 +17,11 @@ sp = spotipy.Spotify(
 
 
 def get_track_features(title: str, artist: str):
-    key = f"features:{title}:{artist}"
-    cached = r.get(key)
+    key = f"features:{title}:{artist}"  # create a unique key for each track
+    cached = r.get(key)  # check Redis cache
     if cached:
         return json.loads(cached)
+    # cache miss: fetch from Spotify API
     results = sp.search(q=f"track:{title} artist:{artist}", type="track", limit=1)
 
     tracks = results["tracks"]["items"]
@@ -36,7 +40,7 @@ def get_track_features(title: str, artist: str):
         "duration_ms": track["duration_ms"],
         "genres": artist_info.get("genres", []),
     }
-    r.set(key, json.dumps(result), ex=3600)
+    r.set(key, json.dumps(result), ex=3600)  # cache result for 1 hour (ex=3600s)
     return result
 
 

@@ -1,3 +1,5 @@
+"""CLI for logging and analyzing listened  songs via the API."""
+
 import argparse
 from datetime import datetime
 
@@ -10,8 +12,9 @@ log_parser = subparsers.add_parser("log")
 log_parser.add_argument("title")
 log_parser.add_argument("artist")
 log_parser.add_argument("--mood", default="")
-log_parser.add_argument("--listened_at", default=datetime.now().isoformat())
-
+log_parser.add_argument(
+    "--listened_at", default=datetime.now().isoformat()
+)  # follows the ISO 8601 format for cross-system compatibility.
 subparsers.add_parser("list")
 subparsers.add_parser("analysis")
 

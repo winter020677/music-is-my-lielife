@@ -1,3 +1,5 @@
+"""Pydantic schema for validating POST /songs/log request body."""
+
 from datetime import datetime
 from typing import Optional
 
