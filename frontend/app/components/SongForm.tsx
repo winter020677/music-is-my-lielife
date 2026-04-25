@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 export default function SongForm() {
   const [form, setForm] = useState({
@@ -12,6 +13,7 @@ export default function SongForm() {
   });
 
   const [loading, setLoading] = useState(false);
+  const router = useRouter();
 
   function handleChange(
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
@@ -31,6 +33,7 @@ export default function SongForm() {
     });
     setLoading(false);
     alert("記録完了");
+    router.refresh();
     // console.log("submit fired", form);
     // console.log("response", res.status);
   }
