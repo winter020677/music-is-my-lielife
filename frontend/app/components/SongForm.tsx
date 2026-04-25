@@ -37,7 +37,7 @@ export default function SongForm() {
   return (
     <form className="flex flex-col gap-6 mt-6" onSubmit={handleSubmit}>
       <input
-        className="w-full bg-transparent border-b border-zinc-600 text-white py-2 outline-none"
+        className="w-full bg-transparent border-b border-zinc-600 text-white py-2 outline-none placeholder-zinc-500"
         name="title"
         value={form.title}
         onChange={handleChange}
@@ -45,7 +45,7 @@ export default function SongForm() {
         required
       />
       <input
-        className="w-full bg-transparent border-b border-zinc-600 text-white py-2 outline-none"
+        className="w-full bg-transparent border-b border-zinc-600 text-white py-2 outline-none placeholder-zinc-500"
         name="artist"
         value={form.artist}
         onChange={handleChange}
@@ -53,7 +53,7 @@ export default function SongForm() {
         required
       />
       <input
-        className="w-full bg-transparent border-b border-zinc-600 text-white py-2 outline-none"
+        className="w-full bg-transparent border-b border-zinc-600 text-white py-2 outline-none placeholder-zinc-500"
         name="listened_at"
         value={form.listened_at}
         onChange={handleChange}
@@ -61,14 +61,14 @@ export default function SongForm() {
         required
       />
       <input
-        className="w-full bg-transparent border-b border-zinc-600 text-white py-2 outline-none"
+        className="w-full bg-transparent border-b border-zinc-600 text-white py-2 outline-none placeholder-zinc-500"
         name="mood"
         value={form.mood}
         onChange={handleChange}
         placeholder="気分（任意）"
       />
       <textarea
-        className="w-full bg-transparent border-b border-zinc-600 text-white py-2 outline-none"
+        className="w-full bg-transparent border-b border-zinc-600 text-white py-2 outline-none placeholder-zinc-500"
         name="favorite_part"
         value={form.favorite_part}
         onChange={handleChange}

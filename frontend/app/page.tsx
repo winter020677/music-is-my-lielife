@@ -21,7 +21,9 @@ export default async function Home() {
                 <div className="w-px flex-1 bg-zinc-700" />
               </div>
               <div className="pb-6">
-                <p className="text-xs text-zinc-500">{post.listened_at}</p>
+                <p className="text-xs text-zinc-500">
+                  {new Date(post.listened_at).toLocaleString("ja-JP")}
+                </p>
                 <p className="text-white">
                   {post.title} / {post.artist}
                 </p>
