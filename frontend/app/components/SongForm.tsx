@@ -33,6 +33,13 @@ export default function SongForm() {
     });
     setLoading(false);
     alert("記録完了");
+    setForm({
+      title: "",
+      artist: "",
+      listened_at: "",
+      mood: "",
+      favorite_part: "",
+    });
     router.refresh();
     // console.log("submit fired", form);
     // console.log("response", res.status);

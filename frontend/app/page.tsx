@@ -1,8 +1,19 @@
 import SongForm from "./components/SongForm";
+import Link from "next/link";
+import RecommendForm from "./components/RecommendForm";
 
+type Post = {
+  id: number;
+  title: string;
+  artist: string;
+  listened_at: string;
+  mood: string | null;
+  favorite_part: string | null;
+};
 export default async function Home() {
   const data = await fetch("http://localhost:8000/songs");
-  const posts = await data.json();
+  const posts: Post[] = await data.json();
+
   return (
     <main className="min-h-screen bg-zinc-950 px-4 py-12">
       <div className="max-w-xl mx-auto">
@@ -12,7 +23,14 @@ export default async function Home() {
         <p className="text-zinc-500 text-sm mb-8">
           あなたの人生の音楽を記録する
         </p>
+        <Link
+          href="/recommend"
+          className="text-zinc-400 text-sm hover:text-white transition-colors"
+        >
+          → レコメンドを探す
+        </Link>
         <SongForm />
+        <RecommendForm />
         <ul className="mt-12 space-y-6">
           {posts.map((post) => (
             <li key={post.id} className="flex gap-4">
@@ -28,7 +46,12 @@ export default async function Home() {
                   {post.title} / {post.artist}
                 </p>
                 {post.mood && (
-                  <p className="text-sm text-zinc-400">{post.mood}</p>
+                  <p className="text-sm text-zinc-400">mood: {post.mood}</p>
+                )}
+                {post.favorite_part && (
+                  <p className="text-sm text-zinc-400">
+                    favorite: {post.favorite_part}
+                  </p>
                 )}
               </div>
             </li>
