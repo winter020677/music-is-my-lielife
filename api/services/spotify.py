@@ -1,6 +1,8 @@
+import json
 import os
 
 import spotipy
+from services.cache import r
 from spotipy.oauth2 import SpotifyClientCredentials
 
 sp = spotipy.Spotify(
@@ -12,6 +14,10 @@ sp = spotipy.Spotify(
 
 
 def get_track_features(title: str, artist: str):
+    key = f"features:{title}:{artist}"
+    cached = r.get(key)
+    if cached:
+        return json.loads(cached)
     results = sp.search(q=f"track:{title} artist:{artist}", type="track", limit=1)
 
     tracks = results["tracks"]["items"]
@@ -20,16 +26,18 @@ def get_track_features(title: str, artist: str):
     track_id = tracks[0]["id"]
     track = sp.track(track_id)
     artist_id = track["artists"][0]["id"]
-    artist = sp.artist(artist_id)
+    artist_info = sp.artist(artist_id)
 
-    return {
+    result = {
         "title": track["name"],
         "artist": track["artists"][0]["name"],
         "album": track["album"]["name"],
-        "popularity": track["popularity"],
+        "popularity": track.get("popularity"),
         "duration_ms": track["duration_ms"],
-        "genres": artist["genres"],
+        "genres": artist_info.get("genres", []),
     }
+    r.set(key, json.dumps(result), ex=3600)
+    return result
 
 
 def get_recommendations(title: str, artist: str, limit: int = 5):
