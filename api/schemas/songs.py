@@ -1,3 +1,5 @@
+"""Pydantic schema for validating POST /songs/log request body."""
+
 from datetime import datetime
 from typing import Optional
 
@@ -9,4 +11,4 @@ class SongSchema(BaseModel):
     artist: str
     listened_at: datetime
     mood: Optional[str] = None
-    favorite_part: Optional[str] = Nofrom schemas.songs import SongScheman
+    favorite_part: Optional[str] = None
