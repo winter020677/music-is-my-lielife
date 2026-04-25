@@ -30,7 +30,6 @@ export default async function Home() {
           → レコメンドを探す
         </Link>
         <SongForm />
-        <RecommendForm />
         <ul className="mt-12 space-y-6">
           {posts.map((post) => (
             <li key={post.id} className="flex gap-4">
