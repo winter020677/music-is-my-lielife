@@ -25,7 +25,7 @@ export default function SongForm() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
-    const res = await fetch("http://localhost:8000/songs/log", {
+    await fetch("http://localhost:8000/songs/log", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -43,8 +43,6 @@ export default function SongForm() {
       favorite_part: "",
     });
     router.refresh();
-    // console.log("submit fired", form);
-    // console.log("response", res.status);
   }
   return (
     <form className="flex flex-col gap-6 mt-6" onSubmit={handleSubmit}>
@@ -65,7 +63,7 @@ export default function SongForm() {
         required
       />
       <input
-        className="w-full bg-transparent border-b border-zinc-600 text-white py-2 outline-none placeholder-zinc-500"
+        className="w-full bg-transparent border-b border-zinc-600 text-white py-2 outline-none placeholder-zinc-500 [color-scheme:dark]"
         name="listened_at"
         value={form.listened_at}
         onChange={handleChange}
@@ -73,7 +71,7 @@ export default function SongForm() {
         required
       />
       <select
-        className="w-full bg-transparent border-b border-zinc-600 text-white py-2 outline-none"
+        className="w-full bg-zinc-950 border-b border-zinc-600 text-white py-2 outline-none"
         name="mood"
         value={form.mood}
         onChange={handleChange}
