@@ -2,11 +2,15 @@ import Link from "next/link";
 import SongForm from "./components/SongForm";
 import RecommendForm from "./components/RecommendForm";
 import SongList from "./components/SongList";
+import MoodChart from "./components/MoodChart";
 
 export default async function Home() {
   const data = await fetch("http://localhost:8000/songs");
-  const posts: Post[] = await data.json();
-
+  const posts = await data.json();
+  const trendData = await fetch("http://localhost:8000/songs/mood-trend", {
+    cache: "no-store",
+  });
+  const trend = await trendData.json();
   return (
     <main className="min-h-screen bg-zinc-950 px-4 py-12">
       <div className="max-w-xl mx-auto">
@@ -24,6 +28,7 @@ export default async function Home() {
         </Link>
         <SongForm />
         <SongList posts={posts} />
+        <MoodChart trend={trend.trend} />
       </div>
     </main>
   );

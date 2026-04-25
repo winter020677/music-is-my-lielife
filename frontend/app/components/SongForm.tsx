@@ -16,7 +16,9 @@ export default function SongForm() {
   const router = useRouter();
 
   function handleChange(
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >,
   ) {
     setForm({ ...form, [e.target.name]: e.target.value });
   }
@@ -70,13 +72,19 @@ export default function SongForm() {
         type="datetime-local"
         required
       />
-      <input
-        className="w-full bg-transparent border-b border-zinc-600 text-white py-2 outline-none placeholder-zinc-500"
+      <select
+        className="w-full bg-transparent border-b border-zinc-600 text-white py-2 outline-none"
         name="mood"
         value={form.mood}
         onChange={handleChange}
-        placeholder="気分（任意）"
-      />
+      >
+        <option value="">気分（任意）</option>
+        <option value="happy">happy</option>
+        <option value="calm">calm</option>
+        <option value="neutral">neutral</option>
+        <option value="tired">tired</option>
+        <option value="sad">sad</option>
+      </select>
       <textarea
         className="w-full bg-transparent border-b border-zinc-600 text-white py-2 outline-none placeholder-zinc-500"
         name="favorite_part"
