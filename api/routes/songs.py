@@ -1,7 +1,7 @@
 from collections import Counter
 
 from database import get_db
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from models.songs import Song
 from schemas.songs import SongSchema
 from services.spotify import get_recommendations, get_track_features
@@ -45,7 +45,7 @@ def recommend_songs(title: str, artist: str, limit: int = 5):
     """return song recommendations based on genre"""
     recs = get_recommendations(title, artist, limit)
     if recs is None:
-        return {"error": "song not found"}
+        raise HTTPException(status_code=404, detail="song not found")
     return {"recommendations": recs}
 
 
@@ -61,7 +61,7 @@ def analysis_songs(db: Session = Depends(get_db)):
 def delete_song(song_id: int, db: Session = Depends(get_db)):
     song = db.query(Song).filter(Song.id == song_id).first()
     if not song:
-        return {"error": "not found"}
+        raise HTTPException(status_code=404, detail="song not found")
     db.delete(song)
     db.commit()
     return {"ok": True}
