@@ -119,6 +119,19 @@ export function giftCatalog(db: Db): GiftCatalogRow[] {
     .all() as unknown as GiftCatalogRow[];
 }
 
+/**
+ * ギフトに自分で付けた表示名を書き込む（要件 R-4）。
+ * 空文字を渡すと、自分で付けた名前を消して、TikTokの名前に戻す。
+ * まだ一度も来ていないギフトには付けられない（一覧に行がないため）。
+ */
+export function setGiftDisplayName(db: Db, giftId: string, displayName: string): boolean {
+  const value = displayName.trim();
+  const result = db
+    .prepare('UPDATE gift_catalog SET display_name = ? WHERE gift_id = ?')
+    .run(value === '' ? null : value, giftId);
+  return Number(result.changes) > 0;
+}
+
 export interface RuleRunRow {
   id: number;
   at: string;

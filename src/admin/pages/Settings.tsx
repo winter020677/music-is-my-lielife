@@ -21,11 +21,6 @@ export function SettingsPage({ state }: { state: AppState }) {
     setDraft((prev) => ({ ...prev, [section]: { ...prev[section], [key]: value } }));
     setSaved(null);
   };
-  const setGift = <K extends keyof Settings['phase0']['giftReaction']>(key: K, value: Settings['phase0']['giftReaction'][K]) => {
-    setDraft((prev) => ({ ...prev, phase0: { ...prev.phase0, giftReaction: { ...prev.phase0.giftReaction, [key]: value } } }));
-    setSaved(null);
-  };
-
   const save = async () => {
     const res = await api<{ settings: Settings }>('PUT', '/api/settings', draft);
     setDraft(res.settings);
@@ -105,28 +100,10 @@ export function SettingsPage({ state }: { state: AppState }) {
 
       <VoicevoxCard draft={draft} set={set} />
 
-      <Card title="ギフトの反応（フェーズ0の試作）">
+      <Card title="アラート">
         <p className="muted small">
-          ギフトが届いたら、ここで決めた反応をします。フェーズ1で、きっかけ・やることを自由に組める「ルール」に置き換えます。
-          置き換え記号：{'{nickname}'} {'{giftname}'} {'{giftcount}'} {'{coins}'} {'{playername}'} {'{random:X Y}'} {'{mult:X Y}'} {'{plus:X Y}'}
+          何が起きたら何をするかは、上のタブの「ルール」で決めます。ここでは、アラートの見え方だけを決めます。
         </p>
-        <Check label="ギフトに反応する" checked={draft.phase0.giftReaction.enabled} onChange={(v) => setGift('enabled', v)} />
-        <Check
-          label="アラート用オーバーレイに表示する"
-          checked={draft.phase0.giftReaction.showOnOverlay}
-          onChange={(v) => setGift('showOnOverlay', v)}
-        />
-        <Field label="Minecraftに送るコマンド（1行に1つ。空なら送らない）">
-          <textarea
-            rows={4}
-            value={draft.phase0.giftReaction.minecraftCommand}
-            onChange={(e) => setGift('minecraftCommand', e.target.value)}
-            placeholder="例：execute at {playername} run summon zombie ~{random:-3 3} ~ ~{random:-3 3}"
-          />
-        </Field>
-        <Field label="読み上げる文（空なら読まない）">
-          <input value={draft.phase0.giftReaction.speechText} onChange={(e) => setGift('speechText', e.target.value)} />
-        </Field>
         <Field label="アラートを表示する秒数">
           <NumberInput value={draft.alert.displaySec} min={1} max={60} step={0.5} onChange={(v) => set('alert', 'displaySec', v)} />
         </Field>

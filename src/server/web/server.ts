@@ -14,7 +14,7 @@ import { OVERLAY_NAME_PATTERN } from '../actions/overlayHub.ts';
 import type { App } from '../app.ts';
 import { SECRET_KEYS } from '../config/secrets.ts';
 import { describeError } from '../core/logger.ts';
-import { dbInfo, giftCatalog, listStreams, phase0Check } from '../db/queries.ts';
+import { dbInfo, giftCatalog, listStreams, phase0Check, setGiftDisplayName } from '../db/queries.ts';
 
 export const HOST = '127.0.0.1';
 
@@ -225,6 +225,14 @@ export async function createWebServer(app: App): Promise<FastifyInstance> {
     return file ? { ok: true, file } : { ok: false, error: app.backups.status().lastError ?? 'バックアップ中です' };
   });
   server.get('/api/gifts/catalog', async () => ({ gifts: giftCatalog(app.db) }));
+  // ギフトに自分で付ける表示名（要件 R-4）。空にすると、TikTokの名前に戻る
+  server.put('/api/gifts/display-name', async (req, reply) => {
+    const input = parse(z.object({ giftId: z.string().min(1).max(60), displayName: z.string().max(60) }), req.body, reply);
+    if (!input) return reply;
+    const ok = setGiftDisplayName(app.db, input.giftId, input.displayName);
+    if (!ok) return reply.code(404).send({ error: 'そのギフトはまだ一覧にありません（1回でも届くと出てきます）' });
+    return { ok: true, gifts: giftCatalog(app.db) };
+  });
 
   // フォルダを開く（Windowsのエクスプローラー）
   server.post('/api/app/open-folder', async (req, reply) => {

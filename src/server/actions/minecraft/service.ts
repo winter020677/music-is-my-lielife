@@ -127,20 +127,29 @@ export class MinecraftService {
     }
   }
 
-  /** コマンドを順番待ちに入れる（上限の速さで送られる） */
-  enqueue(commands: string[], label: string, onDone?: (error: unknown) => void): void {
+  /** コマンドを順番待ちに入れる（上限の速さで送られる）。priority なら列の先頭へ（要件 A-6） */
+  enqueue(
+    commands: string[],
+    label: string,
+    options: { priority?: boolean; onDone?: (error: unknown) => void } | ((error: unknown) => void) = {},
+  ): void {
+    const opts = typeof options === 'function' ? { onDone: options } : options;
     if (commands.length === 0) {
-      onDone?.(null);
+      opts.onDone?.(null);
       return;
     }
     let remaining = commands.length;
     let firstError: unknown = null;
-    commands.forEach((command, i) => {
-      this.queue.push({ command }, commands.length > 1 ? `${label}（${i + 1}/${commands.length}）` : label, {
+    // 割り込みの時は、複数行が逆順にならないよう、後ろの行から先頭に入れる
+    const order = opts.priority ? [...commands].reverse() : commands;
+    order.forEach((command, i) => {
+      const position = opts.priority ? commands.length - i : i + 1;
+      this.queue.push({ command }, commands.length > 1 ? `${label}（${position}/${commands.length}）` : label, {
+        priority: opts.priority,
         onDone: (error) => {
           if (error && !firstError) firstError = error;
           remaining -= 1;
-          if (remaining === 0) onDone?.(firstError);
+          if (remaining === 0) opts.onDone?.(firstError);
         },
       });
     });

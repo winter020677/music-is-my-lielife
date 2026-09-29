@@ -13,6 +13,7 @@ import { z } from 'zod';
 import { writeFileAtomic } from '../core/fsutil.ts';
 import type { AreaLogger } from '../core/logger.ts';
 import { jstDayOf } from '../core/time.ts';
+import { rulesShape } from './rules.ts';
 
 function isPlainObject(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -28,7 +29,7 @@ const int = (def: number, min: number, max: number) => z.number().int().min(min)
 const decimal = (def: number, min: number, max: number) => z.number().min(min).max(max).catch(def);
 
 export const settingsSchema = z.object({
-  schemaVersion: z.literal(1).catch(1),
+  schemaVersion: z.literal(2).catch(2),
 
   /** TikTok接続（要件 6.1） */
   tiktok: section({
@@ -76,21 +77,8 @@ export const settingsSchema = z.object({
     displaySec: decimal(5, 1, 60),
   }),
 
-  /**
-   * フェーズ0の試作用：ギフトが来たら反応する固定のルール。
-   * フェーズ1で「ルール」の仕組みができたら、そちらに移す。
-   */
-  phase0: section({
-    giftReaction: section({
-      enabled: flag(true),
-      /** アラート用オーバーレイに表示する */
-      showOnOverlay: flag(true),
-      /** Minecraftに送るコマンド（複数行可。空なら送らない） */
-      minecraftCommand: text('say {nickname} から {giftname} x{giftcount}', 5000),
-      /** 読み上げる文（空なら読まない） */
-      speechText: text('{nickname}さん、{giftname}ありがとう', 500),
-    }),
-  }),
+  /** ルール（要件 6.2）。「きっかけ→やること」の組。形の定義は rules.ts */
+  rules: section(rulesShape),
 
   /** 配信の記録（要件 6.11） */
   records: section({
@@ -108,14 +96,76 @@ export const settingsSchema = z.object({
 
 export type Settings = z.infer<typeof settingsSchema>;
 
-/** 初期値だけの設定 */
+/**
+ * 初期値だけの設定。
+ * 初めて使う時も「ギフトの反応」のルールが1つ入るように、移し替えを通す（下の migrateSettings）。
+ */
 export function defaultSettings(): Settings {
-  return settingsSchema.parse({});
+  return normalizeSettings({});
+}
+
+/** 初めて使う時の、決まったセットとルールのID */
+export const DEFAULT_SET_ID = 'set-default';
+export const DEFAULT_GIFT_RULE_ID = 'rule-gift';
+
+/**
+ * 「ギフトが来たらアラート＋Minecraft＋読み上げ」のルールを1つ持つセットを作る。
+ * legacy があれば、フェーズ0の設定（phase0.giftReaction）の中身を引き継ぐ。
+ */
+function defaultRuleSet(legacy: Record<string, unknown> | null): unknown {
+  const str = (key: string, fallback: string) => (typeof legacy?.[key] === 'string' ? (legacy[key] as string) : fallback);
+  const on = (key: string) => (legacy ? legacy[key] !== false : true);
+
+  const command = str('minecraftCommand', 'say {nickname} から {giftname} x{giftcount}');
+  const speech = str('speechText', '{nickname}さん、{giftname}ありがとう');
+  const actions: unknown[] = [];
+  if (on('showOnOverlay')) actions.push({ type: 'alert', alertTitle: '{nickname}', alertMessage: '{giftname} ×{giftcount}' });
+  if (command.trim()) actions.push({ type: 'minecraft', command });
+  if (speech.trim()) actions.push({ type: 'speech', text: speech });
+
+  return {
+    id: DEFAULT_SET_ID,
+    name: 'いつものセット',
+    rules: [
+      {
+        id: DEFAULT_GIFT_RULE_ID,
+        name: 'ギフトの反応',
+        enabled: on('enabled'),
+        trigger: { kind: 'gift', giftIds: [] },
+        actions,
+      },
+    ],
+  };
+}
+
+/**
+ * 古い形の設定を、新しい形に直す（今は v1 → v2 の1つだけ）。
+ *
+ * v1 では、ギフトへの反応は phase0.giftReaction という固定のルール1つだった（フェーズ0の試作）。
+ * v2 ではルールの仕組み（要件 6.2）に移したので、その中身を「ギフトの反応」という
+ * ルール1つに移し替える。利用者が書いたコマンドや読み上げ文が消えないようにするため。
+ *
+ * すでにルールが1つでもある設定は、そのまま返す（二重に移し替えない）。
+ */
+export function migrateSettings(input: unknown): unknown {
+  if (!isPlainObject(input)) return input;
+  const rules = isPlainObject(input.rules) ? input.rules : null;
+  if (rules && Array.isArray(rules.sets) && rules.sets.length > 0) return input;
+
+
+  const phase0 = isPlainObject(input.phase0) ? input.phase0 : null;
+  const legacy = phase0 && isPlainObject(phase0.giftReaction) ? phase0.giftReaction : null;
+  const { phase0: _removed, ...rest } = input;
+  return {
+    ...rest,
+    schemaVersion: 2,
+    rules: { activeSetId: DEFAULT_SET_ID, sets: [defaultRuleSet(legacy)] },
+  };
 }
 
 /** どんな値でも、正しい形の設定にする（おかしな項目は初期値になる） */
 export function normalizeSettings(input: unknown): Settings {
-  return settingsSchema.parse(isPlainObject(input) ? input : {});
+  return settingsSchema.parse(migrateSettings(isPlainObject(input) ? input : {}));
 }
 
 const BACKUP_PREFIX = 'settings-';
