@@ -1,0 +1,168 @@
+/*
+  スピナー用オーバーレイの見た目
+  ・色や大きさは、値を直接書いています。好きな値に書き換えてOKです
+  ・書き換えたら、管理画面の「オーバーレイ」→「全部を再読み込み」で反映されます
+  ・項目の色は「スピナー」画面で決めるので、ここには書いていません
+*/
+
+/* ページ全体：背景は透明（OBSで配信の画面に重ねるため） */
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  overflow: hidden;
+  font-family: "Hiragino Sans", "Yu Gothic UI", "Meiryo", sans-serif;
+}
+
+/* 全体の置き場所：画面の真ん中 */
+#stage {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+#stage[hidden] {
+  display: none;
+}
+
+/* 輪の大きさ。小さくしたい時は 520px を変える */
+#wheel-box {
+  position: relative;
+  width: 520px;
+  height: 520px;
+}
+
+#wheel {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  /* 輪のふち */
+  border: 8px solid rgba(20, 20, 30, 0.85);
+  background: rgba(20, 20, 30, 0.65);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+}
+
+/* 項目1つ分。輪の中心から上に向かって置く */
+.slice {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 0;
+  height: 0;
+  /* rotate は script.js が入れます */
+}
+
+.slice-face {
+  position: absolute;
+  /* 中心から上に 170px の位置に置く */
+  left: -60px;
+  top: -230px;
+  width: 120px;
+  height: 120px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  border-radius: 14px;
+  border: 3px solid rgba(255, 255, 255, 0.5);
+  color: #ffffff;
+  font-size: 15px;
+  font-weight: 700;
+  text-align: center;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.7);
+  padding: 6px;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.slice-face img {
+  width: 44px;
+  height: 44px;
+  object-fit: contain;
+}
+
+/* レア度が高いほど、ふちを目立たせる（1＝ふつう 〜 5＝超レア） */
+.slice[data-rarity="3"] .slice-face {
+  border-color: #6fd3ff;
+}
+
+.slice[data-rarity="4"] .slice-face {
+  border-color: #c98bff;
+  box-shadow: 0 0 16px rgba(201, 139, 255, 0.8);
+}
+
+.slice[data-rarity="5"] .slice-face {
+  border-color: #ffd54a;
+  box-shadow: 0 0 24px rgba(255, 213, 74, 0.95);
+}
+
+/* 止まる位置を指す針（輪の上） */
+#pointer {
+  position: absolute;
+  top: calc(50% - 300px);
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 22px solid transparent;
+  border-right: 22px solid transparent;
+  border-top: 34px solid #ffd54a;
+  filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.6));
+  z-index: 2;
+}
+
+/* 当たりの発表（輪の手前に大きく出す） */
+#result {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 28px 48px;
+  border-radius: 24px;
+  background: rgba(20, 20, 30, 0.9);
+  border: 4px solid #ffd54a;
+  color: #ffffff;
+  font-size: 44px;
+  font-weight: 800;
+  text-shadow: 0 3px 8px rgba(0, 0, 0, 0.8);
+  z-index: 3;
+  animation: result-in 0.35s ease-out;
+}
+
+#result[hidden] {
+  display: none;
+}
+
+#result-image {
+  width: 120px;
+  height: 120px;
+  object-fit: contain;
+}
+
+/* レア度が高い当たりは、枠の色を変える */
+#result[data-rarity="4"] {
+  border-color: #c98bff;
+  box-shadow: 0 0 40px rgba(201, 139, 255, 0.9);
+}
+
+#result[data-rarity="5"] {
+  border-color: #ffd54a;
+  box-shadow: 0 0 56px rgba(255, 213, 74, 1);
+}
+
+@keyframes result-in {
+  from {
+    opacity: 0;
+    transform: scale(0.7);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}

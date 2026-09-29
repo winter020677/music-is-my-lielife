@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <title>スピナー</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!--
+    スピナー用オーバーレイ（ルーレットが回って、当たりが決まる）
+    OBSの「ブラウザ」ソースに、次のURLを入れて使う：
+      http://127.0.0.1:3939/overlay/spinner/
+    おすすめの大きさ：幅 1920 × 高さ 1080（配信の画面と同じ）
+
+    当たりは本体が先に決めています。ここは「その当たりで止まる」ように見せるだけです。
+  -->
+  <div id="stage" hidden>
+    <!-- 止まる位置を指す針 -->
+    <div id="pointer"></div>
+
+    <!-- 回る輪。script.js が中に項目を並べます -->
+    <div id="wheel-box">
+      <div id="wheel"></div>
+    </div>
+
+    <!-- 当たりの発表 -->
+    <div id="result" hidden>
+      <img id="result-image" alt="" hidden>
+      <div id="result-name"></div>
+    </div>
+  </div>
+
+  <script src="/overlay/common/overlay-client.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>

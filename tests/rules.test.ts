@@ -1,6 +1,6 @@
 // ルール（要件 6.2・6.3）のテスト
 import { describe, expect, it } from 'vitest';
-import { activeSet } from '../src/server/config/rules.ts';
+import { activeSet, pickSpinnerItem, type SpinnerItem } from '../src/server/config/rules.ts';
 import {
   DEFAULT_GIFT_RULE_ID,
   DEFAULT_SET_ID,
@@ -19,6 +19,8 @@ function fakes() {
   const commands: Array<{ commands: string[]; priority: boolean }> = [];
   const speeches: string[] = [];
   const mediaShown: Array<{ file: string; priority: boolean; durationSec: number }> = [];
+  /** 回す要求をためておく。テストからは spinNow で「当たった」ことにする */
+  const spins: Array<{ onResult: (item: { id: string; name: string; actions: unknown[] }) => void; priority: boolean }> = [];
   const runs: RuleRunRecord[] = [];
   const timers: Array<{ fn: () => void; ms: number }> = [];
 
@@ -38,6 +40,16 @@ function fakes() {
         options: { priority?: boolean; onDone?: (e: unknown) => void } = {},
       ) => {
         mediaShown.push({ file: payload.file, priority: options.priority === true, durationSec: payload.durationSec });
+        options.onDone?.(null);
+      },
+    },
+    spinner: {
+      enqueue: (
+        request: { onResult: (item: { id: string; name: string; actions: unknown[] }) => void },
+        _label: string,
+        options: { priority?: boolean; onDone?: (e: unknown) => void } = {},
+      ) => {
+        spins.push({ onResult: request.onResult, priority: options.priority === true });
         options.onDone?.(null);
       },
     },
@@ -63,6 +75,7 @@ function fakes() {
     commands,
     speeches,
     mediaShown,
+    spins,
     runs,
     timers,
     runTimers: () => {
@@ -72,6 +85,11 @@ function fakes() {
     },
     deps,
   };
+}
+
+/** テストで使う、まっさらな「やること」 */
+function emptyTestAction() {
+  return activeSet(settingsWith({ actions: [{ type: 'alert' }] }).rules)!.rules[0].actions[0];
 }
 
 /** ルール1つだけを持つ設定を作る */
@@ -331,6 +349,85 @@ describe('メディアのやること（A-1）', () => {
     const settings = settingsWith({ actions: [{ type: 'media', mediaFile: 'a.mp4', priority: true }] });
     engineWith(settings, f).handle(event('gift'));
     expect(f.mediaShown[0].priority).toBe(true);
+  });
+});
+
+describe('スピナーの抽選（S-1）', () => {
+  const item = (id: string, weight: number): SpinnerItem => ({
+    id,
+    name: id,
+    image: '',
+    color: '#4a7cf7',
+    weight,
+    rarity: 1,
+    actions: [],
+  });
+
+  it('当たりやすさ（重み）の通りに選ぶ', () => {
+    const items = [item('A', 1), item('B', 3)];
+    // 合計4。0〜1未満がA、1〜4がB
+    expect(pickSpinnerItem(items, () => 0)?.id).toBe('A');
+    expect(pickSpinnerItem(items, () => 0.2)?.id).toBe('A');
+    expect(pickSpinnerItem(items, () => 0.25)?.id).toBe('B');
+    expect(pickSpinnerItem(items, () => 0.99)?.id).toBe('B');
+  });
+
+  it('当たりやすさが0の項目は選ばれない', () => {
+    const items = [item('でない', 0), item('でる', 1)];
+    for (const r of [0, 0.3, 0.6, 0.999]) {
+      expect(pickSpinnerItem(items, () => r)?.id).toBe('でる');
+    }
+  });
+
+  it('当たる項目が1つもなければ null', () => {
+    expect(pickSpinnerItem([], () => 0)).toBe(null);
+    expect(pickSpinnerItem([item('ゼロ', 0)], () => 0)).toBe(null);
+  });
+
+  it('小数の誤差で余っても、必ず1つ返す', () => {
+    const items = [item('A', 0.1), item('B', 0.2)];
+    expect(pickSpinnerItem(items, () => 1)).not.toBe(null);
+  });
+});
+
+describe('スピナーのやること（A-5・S-2）', () => {
+  it('回す要求を出す', () => {
+    const f = fakes();
+    engineWith(settingsWith({ actions: [{ type: 'spinner' }] }), f).handle(event('gift'));
+    expect(f.spins).toHaveLength(1);
+    expect(f.runs[0].actions).toEqual(['spinner']);
+  });
+
+  it('当たった項目のやることが動き、別の記録が残る', () => {
+    const f = fakes();
+    engineWith(settingsWith({ actions: [{ type: 'spinner' }] }), f).handle(
+      event('gift', { viewer: viewer('9', 'ふゆ') }),
+    );
+
+    // 本体が「当たった」ことにする
+    f.spins[0].onResult({
+      id: 'item1',
+      name: '大当たり',
+      actions: [{ ...emptyTestAction(), type: 'speech', text: '{nickname}さん、当たり' }],
+    } as never);
+
+    expect(f.speeches).toEqual(['ふゆさん、当たり']);
+    const spinnerRun = f.runs.find((r) => r.ruleId === 'spinner:item1');
+    expect(spinnerRun?.ruleName).toBe('スピナーの当たり：大当たり');
+    expect(spinnerRun?.triggerKind).toBe('spinner');
+    expect(spinnerRun?.result).toBe('ok');
+  });
+
+  it('当たった項目の中のスピナーは回さない（回り続けないように）', () => {
+    const f = fakes();
+    engineWith(settingsWith({ actions: [{ type: 'spinner' }] }), f).handle(event('gift'));
+    f.spins[0].onResult({
+      id: 'item1',
+      name: 'また回る',
+      actions: [{ ...emptyTestAction(), type: 'spinner' }],
+    } as never);
+    // 最初の1回だけ
+    expect(f.spins).toHaveLength(1);
   });
 });
 

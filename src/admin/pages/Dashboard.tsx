@@ -13,6 +13,7 @@ export function Dashboard({ state, events }: { state: AppState; events: DisplayE
       <div className="dashboard-main">
         <EventsCard events={events} />
         <div className="dashboard-side">
+          <ControlsCard state={state} />
           <QueueCard state={state} />
           <RuleRunCard state={state} />
           <TodayCard state={state} />
@@ -198,6 +199,49 @@ function EventList({ events }: { events: DisplayEvent[] }) {
         </li>
       ))}
     </ul>
+  );
+}
+
+/** 配信中によく使う操作をまとめたところ（要件 U-2） */
+function ControlsCard({ state }: { state: AppState }) {
+  const sets = state.settings.rules.sets;
+  const activeId = sets.find((s) => s.id === state.settings.rules.activeSetId)?.id ?? sets[0]?.id ?? '';
+
+  return (
+    <Card title="操作">
+      {sets.length > 0 && (
+        <div className="control-row">
+          <span className="control-label">ルールのセット</span>
+          <select
+            value={activeId}
+            onChange={(e) => void api('POST', '/api/rules/active-set', { id: e.target.value })}
+          >
+            {sets.map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.name}（{s.rules.length}）
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
+      <div className="control-row">
+        <span className="control-label">スピナー</span>
+        <ActionButton kind="small" disabled={!state.spinner.ready} onClick={() => api('POST', '/api/spinner/spin')}>
+          回す
+        </ActionButton>
+        {state.spinner.lastResult ? (
+          <span className="muted small">前回：{state.spinner.lastResult.name}</span>
+        ) : (
+          !state.spinner.ready && <span className="muted small">「スピナー」画面で使う設定にしてください</span>
+        )}
+      </div>
+      <div className="control-row">
+        <span className="control-label">オーバーレイ</span>
+        <ActionButton kind="small" onClick={() => api('POST', '/api/overlays/reload')}>
+          全部を再読み込み
+        </ActionButton>
+      </div>
+    </Card>
   );
 }
 

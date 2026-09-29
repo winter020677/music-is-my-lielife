@@ -83,6 +83,47 @@ export const actionSchema = z.object({
 });
 export type RuleAction = z.infer<typeof actionSchema>;
 
+/** スピナーの項目1つ（要件 S-1・S-2） */
+export const spinnerItemSchema = z.object({
+  id: z.string().min(1).max(60),
+  name: str('新しい項目', 60),
+  /** media フォルダの画像ファイル名（空なら色だけで出す） */
+  image: str('', 200),
+  /** 色（#rrggbb） */
+  color: z.string().regex(/^#[0-9a-fA-F]{6}$/).catch('#4a7cf7'),
+  /** 当たりやすさ。大きいほど当たりやすい */
+  weight: decimal(1, 0, 10_000),
+  /** レア度（1〜5）。オーバーレイの見せ方が変わる */
+  rarity: int(1, 1, 5),
+  /** 当たった時にすること（要件 S-2） */
+  actions: listOf(actionSchema, 20),
+});
+export type SpinnerItem = z.infer<typeof spinnerItemSchema>;
+
+export const spinnerShape = {
+  enabled: flag(false),
+  name: str('スピナー', 60),
+  /** 回っている時間（秒） */
+  spinSec: decimal(4, 0.5, 60),
+  /** 当たりを見せておく時間（秒） */
+  resultSec: decimal(3, 0.5, 60),
+  items: listOf(spinnerItemSchema, 100),
+};
+
+/** 当たりやすさ（重み）に従って1つ選ぶ（要件 S-1） */
+export function pickSpinnerItem(items: SpinnerItem[], random: () => number = Math.random): SpinnerItem | null {
+  const usable = items.filter((item) => item.weight > 0);
+  if (usable.length === 0) return null;
+  const total = usable.reduce((sum, item) => sum + item.weight, 0);
+  let point = random() * total;
+  for (const item of usable) {
+    point -= item.weight;
+    if (point < 0) return item;
+  }
+  // 小数の誤差で最後まで残った時のため
+  return usable[usable.length - 1];
+}
+
 export const ruleSchema = z.object({
   /** ルールを見分けるID。これがない項目は読み込みのときに捨てる */
   id: z.string().min(1).max(60),

@@ -28,6 +28,7 @@ import { migrate, pendingMigrations } from './db/migrations.ts';
 import { daySummary } from './db/queries.ts';
 import { Recorder, type RuleRunRecord } from './db/recorder.ts';
 import { MediaService } from './actions/media.ts';
+import { SpinnerService } from './actions/spinner.ts';
 import { MediaStore } from './actions/mediaStore.ts';
 import { RuleEngine } from './rules/engine.ts';
 import type { TikTokClient } from './tiktok/client.ts';
@@ -91,6 +92,7 @@ export class App {
   readonly alerts: AlertService;
   readonly mediaStore: MediaStore;
   readonly media: MediaService;
+  readonly spinner: SpinnerService;
   readonly minecraft: MinecraftService;
   readonly speech: SpeechService;
   readonly rule: RuleEngine;
@@ -150,6 +152,7 @@ export class App {
     this.alerts = new AlertService({ hub: this.hub, getSettings: () => this.settings.get().alert, log: log('演出') });
     this.mediaStore = new MediaStore(this.paths.mediaDir);
     this.media = new MediaService({ hub: this.hub, store: this.mediaStore, log: log('メディア') });
+    this.spinner = new SpinnerService({ hub: this.hub, getSettings: () => this.settings.get().spinner, log: log('スピナー') });
     this.minecraft = new MinecraftService({
       getSettings: () => this.settings.get().minecraft,
       getPassword: () => this.secrets.get('MINECRAFT_RCON_PASSWORD'),
@@ -160,6 +163,7 @@ export class App {
       getSettings: () => this.settings.get(),
       alerts: this.alerts,
       media: this.media,
+      spinner: this.spinner,
       minecraft: this.minecraft,
       speech: this.speech,
       onRun: (run) => this.recordRuleRun(run),
@@ -179,7 +183,10 @@ export class App {
     this.minecraft.onChange(changed);
     this.speech.onChange(changed);
     this.hub.onChange(changed);
-    for (const queue of [this.alerts.queue, this.media.queue, this.minecraft.queue, this.speech.queue]) queue.onChange(changed);
+    for (const queue of [this.alerts.queue, this.media.queue, this.spinner.queue, this.minecraft.queue, this.speech.queue]) {
+      queue.onChange(changed);
+    }
+    this.spinner.onChange(changed);
     this.logger.onEntry((entry) => {
       if (entry.level !== 'info') this.broadcastAdmin({ type: 'log', entry });
     });
@@ -303,6 +310,21 @@ export class App {
   }
 
   /** テストパネルから、にせのイベントを作って流す（要件 U-3、D-8） */
+  /** 管理画面のボタンから、スピナーを手動で回す（要件 U-2） */
+  spinSpinnerManually(): void {
+    // 置き換え記号に入れる名前がいるので、テストの人が回したことにする
+    const event: LiveEvent = {
+      kind: 'comment',
+      at: toIso(Date.now()),
+      msgId: null,
+      isTest: true,
+      late: false,
+      viewer: { id: 'manual', uniqueId: 'manual', nickname: '手動', avatarUrl: null, followStatus: null },
+      text: '',
+    };
+    this.rule.spinManually(event);
+  }
+
   emitTestEvent(input: {
     kind: 'gift' | 'like' | 'comment' | 'follow' | 'share' | 'join' | 'subscribe';
     name: string;
@@ -435,7 +457,14 @@ export class App {
       minecraft: { status: this.minecraft.getStatus(), recent: this.minecraft.recentResults() },
       speech: this.speech.getStatus(),
       overlays: this.hub.counts(),
-      queues: [this.alerts.queue.snapshot(), this.media.queue.snapshot(), this.minecraft.queue.snapshot(), this.speech.queue.snapshot()],
+      queues: [
+        this.alerts.queue.snapshot(),
+        this.media.queue.snapshot(),
+        this.spinner.queue.snapshot(),
+        this.minecraft.queue.snapshot(),
+        this.speech.queue.snapshot(),
+      ],
+      spinner: { ready: this.spinner.ready(), lastResult: this.spinner.getLastResult() },
       secrets: this.secrets.status(),
       settings,
       events: includeEvents ? [...this.recentEvents].reverse() : [],
@@ -447,7 +476,9 @@ export class App {
   }
 
   queueByName(name: string) {
-    return [this.alerts.queue, this.media.queue, this.minecraft.queue, this.speech.queue].find((q) => q.name === name) ?? null;
+    return [this.alerts.queue, this.media.queue, this.spinner.queue, this.minecraft.queue, this.speech.queue].find(
+      (q) => q.name === name,
+    ) ?? null;
   }
 
   addOverlaySocket(name: string, socket: OverlaySocket): void {

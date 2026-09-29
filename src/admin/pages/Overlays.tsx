@@ -19,6 +19,13 @@ const OVERLAYS = [
     audio: true,
   },
   {
+    name: 'spinner',
+    title: 'スピナー',
+    description: 'ルーレットが回って、当たりが決まるところを見せます。「スピナー」の画面で中身を決めます。',
+    size: '幅 1920 × 高さ 1080（配信の画面と同じ大きさ）',
+    audio: false,
+  },
+  {
     name: 'speech',
     title: '読み上げ（音だけ）',
     description: 'VOICEVOXで作った読み上げの音を鳴らします。画面には何も出ません。',

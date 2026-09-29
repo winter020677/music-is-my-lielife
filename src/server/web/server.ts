@@ -146,6 +146,27 @@ export async function createWebServer(app: App): Promise<FastifyInstance> {
     return { ok: true, event };
   });
 
+  // セットの切り替え（要件 R-7・U-2）。設定まるごとではなく、ここだけ変える
+  server.post('/api/rules/active-set', async (req, reply) => {
+    const input = parse(z.object({ id: z.string().min(1).max(60) }), req.body, reply);
+    if (!input) return reply;
+    const current = app.settings.get();
+    if (!current.rules.sets.some((set) => set.id === input.id)) {
+      return reply.code(404).send({ error: 'そのセットはありません' });
+    }
+    const settings = app.settings.replace({ ...current, rules: { ...current.rules, activeSetId: input.id } });
+    return { ok: true, activeSetId: settings.rules.activeSetId };
+  });
+
+  // スピナー（要件 S-3・U-2）
+  server.post('/api/spinner/spin', async (_req, reply) => {
+    if (!app.spinner.ready()) {
+      return reply.code(400).send({ error: 'スピナーが使えません（「スピナー」画面で、使う設定にして項目を追加してください）' });
+    }
+    app.spinSpinnerManually();
+    return { ok: true };
+  });
+
   // Minecraft（要件 M-2）
   const commandSchema = z.object({ command: z.string().min(1).max(2000), delaySec: z.number().int().min(0).max(60).default(0) });
   server.post('/api/minecraft/command', async (req, reply) => {
