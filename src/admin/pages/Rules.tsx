@@ -136,6 +136,7 @@ export function RulesPage({ state }: { state: AppState }) {
               rule={rule}
               gifts={gifts}
               media={media}
+              saved={!dirty}
               position={i + 1}
               total={set.rules.length}
               onChange={(fn) => updateRule(rule.id, fn)}
@@ -268,6 +269,7 @@ function RuleCard({
   rule,
   gifts,
   media,
+  saved,
   position,
   total,
   onChange,
@@ -278,6 +280,8 @@ function RuleCard({
   rule: Rule;
   gifts: GiftRow[];
   media: MediaFileRow[];
+  /** 保存済みか。保存していないと、本体はまだ新しい中身を知らないのでテストできない */
+  saved: boolean;
   position: number;
   total: number;
   onChange: (fn: (r: Rule) => Rule) => void;
@@ -321,6 +325,13 @@ function RuleCard({
           <button type="button" className="button button-small" disabled={position === total} onClick={() => onMove(1)}>
             ↓
           </button>
+          <ActionButton
+            kind="small"
+            disabled={!saved || rule.actions.length === 0}
+            onClick={() => api('POST', '/api/rules/test', { kind: 'rule', id: rule.id, actionIndex: null })}
+          >
+            試す
+          </ActionButton>
           <button type="button" className="button button-small" onClick={() => setOpen((v) => !v)}>
             {open ? '閉じる' : '開く'}
           </button>
@@ -411,6 +422,7 @@ function RuleCard({
           )}
 
           <h3 className="rule-section">やること</h3>
+          {!saved && <p className="muted small">※「試す」は、保存してから押せます。</p>}
           {rule.actions.length === 0 && <p className="muted small">まだ何もありません。下のボタンで追加してください。</p>}
           {rule.actions.map((action, i) => (
             <ActionEditor
@@ -418,6 +430,7 @@ function RuleCard({
               action={action}
               media={media}
               position={i + 1}
+              test={saved ? { kind: 'rule', id: rule.id, index: i } : null}
               onChange={(fn) =>
                 onChange((r) => ({ ...r, actions: r.actions.map((a, j) => (j === i ? fn(a) : a)) }))
               }

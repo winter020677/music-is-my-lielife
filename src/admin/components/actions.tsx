@@ -60,12 +60,15 @@ export function ActionEditor({
   action,
   media,
   position,
+  test,
   onChange,
   onDelete,
 }: {
   action: RuleAction;
   media: MediaFileRow[];
   position: number;
+  /** この「やること」だけを試す（要件 U-4）。保存していない時は渡さない */
+  test?: { kind: 'rule' | 'spinnerItem'; id: string; index: number } | null;
   onChange: (fn: (a: RuleAction) => RuleAction) => void;
   onDelete: () => void;
 }) {
@@ -81,6 +84,14 @@ export function ActionEditor({
           <input type="checkbox" checked={action.priority} onChange={(e) => set('priority', e.target.checked)} />
           割り込み（順番待ちを追い越す）
         </label>
+        {test && (
+          <ActionButton
+            kind="small"
+            onClick={() => api('POST', '/api/rules/test', { kind: test.kind, id: test.id, actionIndex: test.index })}
+          >
+            これだけ試す
+          </ActionButton>
+        )}
         <button type="button" className="button button-small" onClick={onDelete}>
           消す
         </button>

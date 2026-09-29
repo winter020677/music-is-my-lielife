@@ -27,6 +27,7 @@ import { openDatabase, type Db } from './db/database.ts';
 import { migrate, pendingMigrations } from './db/migrations.ts';
 import { daySummary } from './db/queries.ts';
 import { Recorder, type RuleRunRecord } from './db/recorder.ts';
+import { activeSet, defaultOverlayLook } from './config/rules.ts';
 import { MediaService } from './actions/media.ts';
 import { SpinnerService } from './actions/spinner.ts';
 import { MediaStore } from './actions/mediaStore.ts';
@@ -310,6 +311,34 @@ export class App {
   }
 
   /** テストパネルから、にせのイベントを作って流す（要件 U-3、D-8） */
+  /**
+   * 管理画面の「テスト」ボタン（要件 U-4）。
+   * ルール（またはスピナーの項目）の「やること」を、テストのイベントで動かす。
+   */
+  testActions(target: { kind: 'rule' | 'spinnerItem'; id: string; actionIndex: number | null }): { ok: true } | { error: string } {
+    const settings = this.settings.get();
+    let actions;
+    let label: string;
+    if (target.kind === 'rule') {
+      const set = activeSet(settings.rules);
+      const rule = set?.rules.find((r) => r.id === target.id);
+      if (!rule) return { error: 'そのルールはありません（保存してからもう一度試してください）' };
+      actions = rule.actions;
+      label = rule.name;
+    } else {
+      const item = settings.spinner.items.find((i) => i.id === target.id);
+      if (!item) return { error: 'その項目はありません（保存してからもう一度試してください）' };
+      actions = item.actions;
+      label = item.name;
+    }
+    if (actions.length === 0) return { error: 'この中に「やること」がありません' };
+
+    // テストボタンは、このルールだけを動かす（イベントを流すと、ほかのルールまで動いてしまう）
+    const event = this.buildTestEvent({ kind: 'gift', name: 'テスト視聴者', giftName: 'テストギフト', coins: 1, count: 1 });
+    this.rule.testActions(actions, event, label, target.actionIndex);
+    return { ok: true };
+  }
+
   /** 管理画面のボタンから、スピナーを手動で回す（要件 U-2） */
   spinSpinnerManually(): void {
     // 置き換え記号に入れる名前がいるので、テストの人が回したことにする
@@ -325,7 +354,15 @@ export class App {
     this.rule.spinManually(event);
   }
 
-  emitTestEvent(input: {
+  /** テストのイベントを作って流す（テストパネル。要件 U-3） */
+  emitTestEvent(input: Parameters<App['buildTestEvent']>[0]): LiveEvent {
+    const event = this.buildTestEvent(input);
+    this.emit(event);
+    return event;
+  }
+
+  /** テストのイベントを作るだけ（流さない）。テストボタンで使う */
+  buildTestEvent(input: {
     kind: 'gift' | 'like' | 'comment' | 'follow' | 'share' | 'join' | 'subscribe';
     name: string;
     giftId?: string;
@@ -374,7 +411,6 @@ export class App {
       default:
         event = { ...base, kind: input.kind };
     }
-    this.emit(event);
     return event;
   }
 
@@ -391,11 +427,12 @@ export class App {
     this.scheduleStatePush();
   }
 
-  /** オーバーレイに渡す設定（名前ごと） */
+  /** オーバーレイに渡す設定（名前ごと）。見た目（要件 O-6）は全部のオーバーレイに渡す */
   private overlaySettings(name: string): Record<string, unknown> {
     const settings = this.settings.get();
-    if (name === 'alert') return { displaySec: settings.alert.displaySec };
-    return {};
+    const look = settings.overlays[name] ?? defaultOverlayLook();
+    const own: Record<string, unknown> = name === 'alert' ? { displaySec: settings.alert.displaySec } : {};
+    return { ...own, look };
   }
 
   // ───────── 管理画面 ─────────

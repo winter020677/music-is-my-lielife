@@ -146,6 +146,23 @@ export async function createWebServer(app: App): Promise<FastifyInstance> {
     return { ok: true, event };
   });
 
+  // ルール・スピナーの項目の「テスト」ボタン（要件 U-4）
+  server.post('/api/rules/test', async (req, reply) => {
+    const input = parse(
+      z.object({
+        kind: z.enum(['rule', 'spinnerItem']),
+        id: z.string().min(1).max(60),
+        actionIndex: z.number().int().min(0).max(100).nullable().default(null),
+      }),
+      req.body,
+      reply,
+    );
+    if (!input) return reply;
+    const result = app.testActions(input);
+    if ('error' in result) return reply.code(400).send(result);
+    return result;
+  });
+
   // セットの切り替え（要件 R-7・U-2）。設定まるごとではなく、ここだけ変える
   server.post('/api/rules/active-set', async (req, reply) => {
     const input = parse(z.object({ id: z.string().min(1).max(60) }), req.body, reply);

@@ -13,7 +13,7 @@ import { z } from 'zod';
 import { writeFileAtomic } from '../core/fsutil.ts';
 import type { AreaLogger } from '../core/logger.ts';
 import { jstDayOf } from '../core/time.ts';
-import { rulesShape, spinnerShape } from './rules.ts';
+import { overlaysShape, rulesShape, spinnerShape } from './rules.ts';
 
 function isPlainObject(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -79,6 +79,9 @@ export const settingsSchema = z.object({
 
   /** ルール（要件 6.2）。「きっかけ→やること」の組。形の定義は rules.ts */
   rules: section(rulesShape),
+
+  /** オーバーレイの見た目（要件 O-6）。名前ごとに持つ。形の定義は rules.ts */
+  overlays: overlaysShape,
 
   /** スピナー（要件 6.5）。形の定義は rules.ts */
   spinner: section(spinnerShape),

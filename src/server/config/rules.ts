@@ -156,6 +156,44 @@ function isPlainObject(value: unknown): value is Record<string, unknown> {
 // ギフトの表示名（要件 R-4）は、設定ではなくデータベースの gift_catalog.display_name に持つ。
 // ギフトの名前・アイコン・コイン数と同じ場所にまとまっていた方が探しやすいため。
 
+/**
+ * オーバーレイの見た目（要件 O-6）。
+ *
+ * それぞれの style.css には、読んで分かるように値を直接書いてある（要件 O-7）。
+ * ここで決めた値は、その上から重ねる形で効かせる（overlay-client.js が style を足す）。
+ * 何も変えていなければ、style.css に書いてある値のまま。
+ */
+export const overlayLookShape = {
+  /** 全体の大きさ（％）。100 がそのまま */
+  scale: decimal(100, 10, 400),
+  /** 文字の大きさ（％）。100 がそのまま */
+  fontScale: decimal(100, 10, 400),
+  /** 余白（px）。-1 なら style.css のまま */
+  padding: decimal(-1, -1, 200),
+  /** 文字の色。空なら style.css のまま */
+  textColor: str('', 40),
+  /** 箱の背景の色。空なら style.css のまま */
+  backgroundColor: str('', 40),
+  /** ふちや目立たせる色。空なら style.css のまま */
+  accentColor: str('', 40),
+  /** 何列に並べるか（イベント一覧用）。0 なら style.css のまま */
+  columns: int(0, 0, 24),
+  /** 自分で足すCSS（要件 O-6） */
+  extraCss: str('', 10_000),
+};
+
+export const overlaysShape = z.preprocess(
+  (v) => (isPlainObject(v) ? v : {}),
+  z.record(z.string().max(40), z.object(overlayLookShape)),
+);
+
+export type OverlayLook = z.infer<z.ZodObject<typeof overlayLookShape>>;
+
+/** 何も決めていない時の見た目 */
+export function defaultOverlayLook(): OverlayLook {
+  return z.object(overlayLookShape).parse({});
+}
+
 export const rulesShape = {
   /** 今使っているセットのID（要件 R-7） */
   activeSetId: str('', 60),

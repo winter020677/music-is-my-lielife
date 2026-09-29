@@ -969,6 +969,34 @@ textarea {
   color: #8a8fa0;
 }
 
+/* オーバーレイの「見た目」を開いたところ */
+.look-box {
+  margin-top: 12px;
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid #e1e4eb;
+  background: #f6f7fa;
+}
+
+.color-field {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.color-field input[type='color'] {
+  width: 36px;
+  height: 30px;
+  padding: 2px;
+  flex: none;
+}
+
+.color-field input[type='text'],
+.color-field input:not([type]) {
+  flex: 1;
+  min-width: 0;
+}
+
 /* ───── 画面がせまい時 ───── */
 @media (max-width: 1200px) {
   .status-row {

@@ -2,6 +2,9 @@
   アラート用オーバーレイの見た目
   ・色や大きさは、値を直接書いています。好きな値に書き換えてOKです
   ・書き換えたら、管理画面の「オーバーレイ」→「全部を再読み込み」で反映されます
+
+  var(--名前, 値) と書いてあるところは、管理画面の「オーバーレイ」→「見た目」でも変えられます。
+  管理画面で何も決めていなければ、うしろに書いてある値がそのまま使われます。
 */
 
 /* ページ全体：背景は透明（OBSで配信の画面に重ねるため） */
@@ -32,14 +35,16 @@ body {
   gap: 20px;
   min-width: 480px;
   max-width: 1200px;
-  padding: 20px 32px;
+  padding: var(--padding, 20px) 32px;
   border-radius: 24px;
   /* 箱の色（黒の半透明）。例：ピンクにするなら rgba(255, 105, 180, 0.85) */
-  background: rgba(20, 20, 30, 0.82);
+  background: var(--bg-color, rgba(20, 20, 30, 0.82));
   /* 箱のふち */
-  border: 3px solid #ffd54a;
+  border: 3px solid var(--accent-color, #ffd54a);
+  /* 全体の大きさ（管理画面で変えられます） */
+  zoom: var(--scale, 1);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
-  color: #ffffff;
+  color: var(--text-color, #ffffff);
   /* 出てくる動き（下の @keyframes alert-in） */
   animation: alert-in 0.5s cubic-bezier(0.2, 1.4, 0.4, 1) both;
 }
@@ -69,10 +74,10 @@ body {
 
 /* 1行目：名前 */
 .alert-title {
-  font-size: 40px;
+  font-size: calc(40px * var(--font-scale, 1));
   font-weight: 800;
   line-height: 1.2;
-  color: #ffd54a;
+  color: var(--accent-color, #ffd54a);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -82,10 +87,10 @@ body {
 
 /* 2行目：ギフト名と個数など */
 .alert-message {
-  font-size: 34px;
+  font-size: calc(34px * var(--font-scale, 1));
   font-weight: 700;
   line-height: 1.2;
-  color: #ffffff;
+  color: var(--text-color, #ffffff);
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.6);
 }
 

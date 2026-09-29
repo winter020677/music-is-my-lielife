@@ -130,6 +130,33 @@ export class RuleEngine {
     this.now = deps.now ?? Date.now;
   }
 
+  /**
+   * 管理画面の「テスト」ボタン（要件 U-4）。
+   * きっかけやクールダウンを見ずに、そのルールの「やること」を動かす。
+   * actionIndex を渡すと、その1つだけを動かす。
+   */
+  testActions(actions: RuleAction[], event: LiveEvent, label: string, actionIndex: number | null): void {
+    const settings = this.deps.getSettings();
+    const chosen = actionIndex === null ? actions : actions[actionIndex] ? [actions[actionIndex]] : [];
+    const run = new RunTracker((done, errors) => {
+      this.deps.onRun({
+        at: event.at,
+        isTest: true,
+        ruleId: 'test',
+        ruleName: `テスト：${label}`,
+        triggerKind: 'test',
+        triggerViewer: 'viewer' in event ? event.viewer : null,
+        triggerDetail: null,
+        actions: done,
+        result:
+          done.length === 0 ? 'skipped' : errors.length === 0 ? 'ok' : errors.length === done.length ? 'error' : 'partial',
+        message: errors.length > 0 ? errors.join(' / ') : null,
+      });
+    });
+    for (const action of chosen) this.runOneAction(action, event, settings, `テスト：${label}`, run);
+    run.close();
+  }
+
   /** 管理画面のボタンから手動で回す（要件 U-2）。当たった項目の「やること」も動く */
   spinManually(event: LiveEvent): void {
     const settings = this.deps.getSettings();
