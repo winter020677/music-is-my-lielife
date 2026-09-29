@@ -1,0 +1,24 @@
+{
+  // 本体（src/server）とテスト（tests）の型チェック用。
+  // 本体はビルドせず、Node.jsがTypeScriptをそのまま動かす（型の部分を読み飛ばす方式）。
+  // そのため「読み飛ばせる書き方」だけを使う（erasableSyntaxOnly）。
+  "compilerOptions": {
+    "target": "es2023",
+    "lib": ["es2023"],
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
+    "types": ["node"],
+    "strict": true,
+    "noEmit": true,
+    "allowImportingTsExtensions": true,
+    "erasableSyntaxOnly": true,
+    "verbatimModuleSyntax": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true
+  },
+  "include": ["src/server/**/*.ts", "tests/**/*.ts", "vitest.config.ts"]
+}

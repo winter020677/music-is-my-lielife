@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <title>新しいオーバーレイ（ひな形）</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!--
+    ■ 新しいオーバーレイの作り方（要件 O-8）
+    1. この _template フォルダをコピーして、名前を変える（例：overlays/counter）
+       名前は「半角の小文字・数字・ハイフン」だけにする
+    2. script.js の connectOverlay('template', ...) の 'template' を、フォルダの名前に変える
+    3. OBSの「ブラウザ」ソースに http://127.0.0.1:3939/overlay/フォルダの名前/ を入れる
+    4. 本体から送る知らせ（type）を決めて、script.js の onMessage で受け取る
+    ※ Claude Codeに「こういう演出が欲しい」と頼めば、この手順で作ってくれます
+  -->
+  <div id="box">ひな形のオーバーレイです</div>
+
+  <script src="/overlay/common/overlay-client.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>

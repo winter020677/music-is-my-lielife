@@ -1,0 +1,26 @@
+/*
+  ひな形のオーバーレイの見た目
+  値は直接書く（あとで読んで直しやすいように）
+*/
+
+/* 背景は透明（OBSで配信の画面に重ねるため） */
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  overflow: hidden;
+  font-family: "Hiragino Sans", "Yu Gothic UI", "Meiryo", sans-serif;
+}
+
+/* 表示する箱 */
+#box {
+  display: inline-block;
+  margin: 20px;
+  padding: 12px 20px;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.6);
+  color: #ffffff;
+  font-size: 28px;
+  font-weight: 700;
+}

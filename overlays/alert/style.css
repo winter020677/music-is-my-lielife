@@ -1,0 +1,139 @@
+/*
+  アラート用オーバーレイの見た目
+  ・色や大きさは、値を直接書いています。好きな値に書き換えてOKです
+  ・書き換えたら、管理画面の「オーバーレイ」→「全部を再読み込み」で反映されます
+*/
+
+/* ページ全体：背景は透明（OBSで配信の画面に重ねるため） */
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  overflow: hidden;
+  font-family: "Hiragino Sans", "Yu Gothic UI", "Meiryo", sans-serif;
+}
+
+/* アラートを置く場所：画面の上のほう・真ん中 */
+#stage {
+  position: fixed;
+  top: 60px;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+}
+
+/* アラート1つ分の箱 */
+.alert {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  min-width: 480px;
+  max-width: 1200px;
+  padding: 20px 32px;
+  border-radius: 24px;
+  /* 箱の色（黒の半透明）。例：ピンクにするなら rgba(255, 105, 180, 0.85) */
+  background: rgba(20, 20, 30, 0.82);
+  /* 箱のふち */
+  border: 3px solid #ffd54a;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  color: #ffffff;
+  /* 出てくる動き（下の @keyframes alert-in） */
+  animation: alert-in 0.5s cubic-bezier(0.2, 1.4, 0.4, 1) both;
+}
+
+/* 消える時の動き */
+.alert.leaving {
+  animation: alert-out 0.4s ease-in both;
+}
+
+/* 送ってくれた人のアイコン（丸） */
+.alert-avatar {
+  width: 88px;
+  height: 88px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid #ffffff;
+  background: #444444;
+}
+
+/* 文字の部分 */
+.alert-text {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+/* 1行目：名前 */
+.alert-title {
+  font-size: 40px;
+  font-weight: 800;
+  line-height: 1.2;
+  color: #ffd54a;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  /* 文字のふち（配信画面で読みやすくするため） */
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.6);
+}
+
+/* 2行目：ギフト名と個数など */
+.alert-message {
+  font-size: 34px;
+  font-weight: 700;
+  line-height: 1.2;
+  color: #ffffff;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.6);
+}
+
+/* ギフトの画像 */
+.alert-image {
+  width: 96px;
+  height: 96px;
+  object-fit: contain;
+  /* ギフトの画像が、ふわふわ動く */
+  animation: alert-float 1.2s ease-in-out infinite alternate;
+}
+
+/* 画像がない時は、場所をとらない */
+.alert-avatar[hidden],
+.alert-image[hidden] {
+  display: none;
+}
+
+/* 出てくる動き：上から少し大きく出てきて、ぴたっと止まる */
+@keyframes alert-in {
+  from {
+    opacity: 0;
+    transform: translateY(-40px) scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* 消える動き：上に消えていく */
+@keyframes alert-out {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-30px) scale(0.9);
+  }
+}
+
+/* ギフトの画像のふわふわ */
+@keyframes alert-float {
+  from {
+    transform: translateY(-6px) rotate(-6deg);
+  }
+  to {
+    transform: translateY(6px) rotate(6deg);
+  }
+}

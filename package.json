@@ -1,0 +1,40 @@
+{
+  "name": "tiktok-live-tool",
+  "version": "0.1.0",
+  "private": true,
+  "description": "TikTok LIVE配信ツール（STE＋LiveSpark統合・自分専用）",
+  "license": "UNLICENSED",
+  "type": "module",
+  "engines": {
+    "node": ">=22.18.0"
+  },
+  "scripts": {
+    "start": "node --disable-warning=ExperimentalWarning src/server/main.ts",
+    "dev": "node --disable-warning=ExperimentalWarning --watch src/server/main.ts",
+    "dev:admin": "vite --config src/admin/vite.config.ts",
+    "build": "vite build --config src/admin/vite.config.ts",
+    "typecheck": "tsc -p tsconfig.json && tsc -p src/admin/tsconfig.json",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "@fastify/static": "^10.1.5",
+    "@fastify/websocket": "^11.3.1",
+    "fastify": "^5.12.5",
+    "tiktok-live-connector": "^2.5.0",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@types/node": "^24.19.0",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@types/ws": "^8.18.1",
+    "@vitejs/plugin-react": "^6.1.1",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.1",
+    "vitest": "^5.0.2",
+    "ws": "^8.18.3"
+  }
+}
