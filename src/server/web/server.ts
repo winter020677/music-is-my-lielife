@@ -10,6 +10,7 @@ import fastifyStatic from '@fastify/static';
 import fastifyWebsocket from '@fastify/websocket';
 import Fastify, { type FastifyInstance, type FastifyReply } from 'fastify';
 import { z } from 'zod';
+import { ALLOWED_EXTENSIONS, MAX_MEDIA_BYTES } from '../actions/mediaStore.ts';
 import { OVERLAY_NAME_PATTERN } from '../actions/overlayHub.ts';
 import type { App } from '../app.ts';
 import { SECRET_KEYS } from '../config/secrets.ts';
@@ -39,6 +40,11 @@ export async function createWebServer(app: App): Promise<FastifyInstance> {
     return undefined;
   });
 
+  // メディアのアップロードは、ファイルの中身をそのまま送ってもらう（multipart を使わない）
+  server.addContentTypeParser('application/octet-stream', { parseAs: 'buffer', bodyLimit: MAX_MEDIA_BYTES }, (_req, body, done) => {
+    done(null, body);
+  });
+
   await server.register(fastifyWebsocket);
 
   // ───── WebSocket（リアルタイムの知らせ） ─────
@@ -62,6 +68,18 @@ export async function createWebServer(app: App): Promise<FastifyInstance> {
     redirect: true,
     index: ['index.html'],
     cacheControl: false,
+  });
+
+  // ───── メディア（利用者が入れた動画・画像・音。要件 A-1） ─────
+  app.mediaStore.ensure();
+  await server.register(fastifyStatic, {
+    root: app.paths.mediaDir,
+    prefix: '/media/',
+    decorateReply: false,
+    cacheControl: false,
+    // フォルダの中身を一覧で見せない
+    index: false,
+    list: false,
   });
 
   // ───── 管理画面 ─────
@@ -225,6 +243,31 @@ export async function createWebServer(app: App): Promise<FastifyInstance> {
     return file ? { ok: true, file } : { ok: false, error: app.backups.status().lastError ?? 'バックアップ中です' };
   });
   server.get('/api/gifts/catalog', async () => ({ gifts: giftCatalog(app.db) }));
+  // メディア（要件 A-1）
+  server.get('/api/media', async () => ({ files: app.mediaStore.list(), folder: app.mediaStore.folder }));
+  server.post('/api/media/upload', { bodyLimit: MAX_MEDIA_BYTES }, async (req, reply) => {
+    const name = String((req.query as { name?: string }).name ?? '');
+    if (!name) return reply.code(400).send({ error: 'ファイル名がありません' });
+    if (!Buffer.isBuffer(req.body)) {
+      return reply.code(400).send({ error: 'ファイルの中身が送られてきませんでした' });
+    }
+    try {
+      const file = app.mediaStore.save(name, req.body);
+      return { ok: true, file, files: app.mediaStore.list() };
+    } catch (err) {
+      return reply.code(400).send({ error: describeError(err) });
+    }
+  });
+  server.post('/api/media/delete', async (req, reply) => {
+    const input = parse(z.object({ name: z.string().min(1).max(200) }), req.body, reply);
+    if (!input) return reply;
+    if (!app.mediaStore.remove(input.name)) {
+      return reply.code(404).send({ error: 'そのファイルはありません' });
+    }
+    return { ok: true, files: app.mediaStore.list() };
+  });
+  server.get('/api/media/kinds', async () => ({ extensions: ALLOWED_EXTENSIONS, maxBytes: MAX_MEDIA_BYTES }));
+
   // ギフトに自分で付ける表示名（要件 R-4）。空にすると、TikTokの名前に戻る
   server.put('/api/gifts/display-name', async (req, reply) => {
     const input = parse(z.object({ giftId: z.string().min(1).max(60), displayName: z.string().max(60) }), req.body, reply);

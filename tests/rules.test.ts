@@ -18,6 +18,7 @@ function fakes() {
   const alerts: Array<{ payload: AlertPayload; priority: boolean }> = [];
   const commands: Array<{ commands: string[]; priority: boolean }> = [];
   const speeches: string[] = [];
+  const mediaShown: Array<{ file: string; priority: boolean; durationSec: number }> = [];
   const runs: RuleRunRecord[] = [];
   const timers: Array<{ fn: () => void; ms: number }> = [];
 
@@ -28,6 +29,16 @@ function fakes() {
           alerts.push({ payload, priority: options.priority === true });
           options.onDone?.(null);
         },
+      },
+    },
+    media: {
+      enqueue: (
+        payload: { file: string; durationSec: number },
+        _label: string,
+        options: { priority?: boolean; onDone?: (e: unknown) => void } = {},
+      ) => {
+        mediaShown.push({ file: payload.file, priority: options.priority === true, durationSec: payload.durationSec });
+        options.onDone?.(null);
       },
     },
     minecraft: {
@@ -51,6 +62,7 @@ function fakes() {
     alerts,
     commands,
     speeches,
+    mediaShown,
     runs,
     timers,
     runTimers: () => {
@@ -292,6 +304,33 @@ describe('ルールの実行', () => {
     engineWith(settings, f).handle(event('gift'));
     expect(f.alerts[0].priority).toBe(true);
     expect(f.commands[0].priority).toBe(true);
+  });
+});
+
+describe('メディアのやること（A-1）', () => {
+  it('ファイルと、位置・大きさ・音量・秒数を渡す', () => {
+    const f = fakes();
+    const settings = settingsWith({
+      actions: [{ type: 'media', mediaFile: 'ゾンビ.mp4', mediaDurationSec: 3 }],
+    });
+    engineWith(settings, f).handle(event('gift'));
+
+    expect(f.mediaShown).toEqual([{ file: 'ゾンビ.mp4', priority: false, durationSec: 3 }]);
+    expect(f.runs[0].actions).toEqual(['media']);
+  });
+
+  it('ファイルを選んでいないやることは、何もしない', () => {
+    const f = fakes();
+    engineWith(settingsWith({ actions: [{ type: 'media', mediaFile: '  ' }] }), f).handle(event('gift'));
+    expect(f.mediaShown).toHaveLength(0);
+    expect(f.runs[0].result).toBe('skipped');
+  });
+
+  it('割り込みを伝える（A-6）', () => {
+    const f = fakes();
+    const settings = settingsWith({ actions: [{ type: 'media', mediaFile: 'a.mp4', priority: true }] });
+    engineWith(settings, f).handle(event('gift'));
+    expect(f.mediaShown[0].priority).toBe(true);
   });
 });
 

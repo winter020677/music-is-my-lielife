@@ -17,12 +17,13 @@ export const TRIGGER_LABELS: Record<TriggerKind, string> = {
   comment: 'コメント（キーワード）',
 };
 
-/** やることの種類（要件 6.3。メディア（A-1）とスピナー（A-5）はこの後で足す） */
-export const ACTION_TYPES = ['alert', 'minecraft', 'speech'] as const;
+/** やることの種類（要件 6.3。スピナー（A-5）はこの後で足す） */
+export const ACTION_TYPES = ['alert', 'media', 'minecraft', 'speech'] as const;
 export type ActionType = (typeof ACTION_TYPES)[number];
 
 export const ACTION_LABELS: Record<ActionType, string> = {
   alert: 'アラートを出す',
+  media: '動画・画像・音を出す',
   minecraft: 'Minecraftのコマンド',
   speech: '読み上げ',
 };

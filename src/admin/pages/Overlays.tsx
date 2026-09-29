@@ -12,6 +12,13 @@ const OVERLAYS = [
     audio: false,
   },
   {
+    name: 'media',
+    title: 'メディア演出',
+    description: 'ルールの「動画・画像・音を出す」で決めた動画・GIF・画像・効果音を出します。',
+    size: '幅 1920 × 高さ 1080（配信の画面と同じ大きさ）',
+    audio: true,
+  },
+  {
     name: 'speech',
     title: '読み上げ（音だけ）',
     description: 'VOICEVOXで作った読み上げの音を鳴らします。画面には何も出ません。',

@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <title>メディア演出</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!--
+    メディア用オーバーレイ（動画・GIF・画像・効果音を出す）
+    OBSの「ブラウザ」ソースに、次のURLを入れて使う：
+      http://127.0.0.1:3939/overlay/media/
+    おすすめの大きさ：幅 1920 × 高さ 1080（配信の画面と同じ）
+    音が出るので、OBSでは「OBSで音声を制御する」にチェックを入れる。
+  -->
+  <div id="stage"></div>
+
+  <script src="/overlay/common/overlay-client.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>

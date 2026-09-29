@@ -908,6 +908,35 @@ textarea {
   font-size: 12px;
 }
 
+/* メディアのファイル一覧 */
+.media-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.media-table td {
+  padding: 6px 8px 6px 0;
+  border-bottom: 1px solid #eceef3;
+  vertical-align: middle;
+}
+
+.media-table td:first-child {
+  width: 48px;
+  color: #8a8fa0;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.media-name {
+  width: 100%;
+  word-break: break-all;
+}
+
+.media-table td:last-child {
+  text-align: right;
+  white-space: nowrap;
+}
+
 /* ───── 画面がせまい時 ───── */
 @media (max-width: 1200px) {
   .status-row {

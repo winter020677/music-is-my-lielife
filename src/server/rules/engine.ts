@@ -14,6 +14,7 @@
 // 接続し直した時に、昔のギフトで演出が出ないようにするため。
 
 import type { AlertService } from '../actions/alerts.ts';
+import type { MediaService } from '../actions/media.ts';
 import type { MinecraftService } from '../actions/minecraft/service.ts';
 import type { SpeechService } from '../actions/voicevox.ts';
 import { activeSet, type Rule, type RuleAction } from '../config/rules.ts';
@@ -98,6 +99,7 @@ export class LikeProgress {
 export interface RuleEngineDeps {
   getSettings: () => Settings;
   alerts: AlertService;
+  media: MediaService;
   minecraft: MinecraftService;
   speech: SpeechService;
   onRun: (run: RuleRunRecord) => void;
@@ -210,6 +212,9 @@ export class RuleEngine {
         case 'alert':
           this.runAlert(action, event, display, label, run);
           break;
+        case 'media':
+          this.runMedia(action, label, run);
+          break;
         case 'minecraft':
           this.runMinecraft(action, event, settings, label, run);
           break;
@@ -235,6 +240,22 @@ export class RuleEngine {
       },
       label,
       { priority: action.priority, onDone: run.add('overlay') },
+    );
+  }
+
+  private runMedia(action: RuleAction, label: string, run: RunTracker): void {
+    if (!action.mediaFile.trim()) return;
+    this.deps.media.enqueue(
+      {
+        file: action.mediaFile,
+        x: action.mediaX,
+        y: action.mediaY,
+        width: action.mediaWidth,
+        volume: action.mediaVolume,
+        durationSec: action.mediaDurationSec,
+      },
+      label,
+      { priority: action.priority, onDone: run.add('media') },
     );
   }
 

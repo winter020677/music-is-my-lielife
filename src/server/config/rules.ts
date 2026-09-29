@@ -56,6 +56,19 @@ export const actionSchema = z.object({
   alertTitle: str('{nickname}', 200),
   alertMessage: str('{giftname} ×{giftcount}', 200),
 
+  /** media：出すファイルの名前（media フォルダの中。要件 A-1） */
+  mediaFile: str('', 200),
+  /** media：画面の左からの位置（％。真ん中が50） */
+  mediaX: decimal(50, 0, 100),
+  /** media：画面の上からの位置（％。真ん中が50） */
+  mediaY: decimal(50, 0, 100),
+  /** media：大きさ（画面の幅に対する％） */
+  mediaWidth: decimal(40, 1, 100),
+  /** media：音量（0〜1） */
+  mediaVolume: decimal(0.8, 0, 1),
+  /** media：表示する秒数。0なら、動画と音は最後まで／画像は5秒 */
+  mediaDurationSec: decimal(0, 0, 600),
+
   /** minecraft：送るコマンド。複数行書ける（要件 A-2） */
   command: str('', 5000),
   /** minecraft：くり返し回数。{repetition} に入る値でもある */
