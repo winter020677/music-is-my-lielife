@@ -66,7 +66,8 @@ async function main(): Promise<void> {
     if (stopping) return;
     stopping = true;
     log.info(`終了します（${reason}）`);
-    const force = setTimeout(() => process.exit(0), 10_000);
+    // Minecraftサーバーが動いている時は、ワールドの保存（最長60秒で強制終了）を待てるように長めにする
+    const force = setTimeout(() => process.exit(0), app.minecraftServer.isRunning() ? 90_000 : 10_000);
     force.unref();
     try {
       await server.close();

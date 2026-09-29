@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { api, useLiveData, type AppState } from './api.ts';
 import { ActionButton, StatusBadge, type Tone } from './components/ui.tsx';
 import { Dashboard } from './pages/Dashboard.tsx';
+import { MinecraftPage } from './pages/Minecraft.tsx';
 import { OverlaysPage } from './pages/Overlays.tsx';
 import { RecordsPage } from './pages/Records.tsx';
 import { RulesPage } from './pages/Rules.tsx';
@@ -16,6 +17,7 @@ const PAGES = [
   { id: 'rules', label: 'ルール' },
   { id: 'spinner', label: 'スピナー' },
   { id: 'test', label: 'テスト' },
+  { id: 'minecraft', label: 'Minecraft' },
   { id: 'records', label: '記録' },
   { id: 'overlays', label: 'オーバーレイ' },
   { id: 'settings', label: '設定' },
@@ -24,7 +26,7 @@ const PAGES = [
 type PageId = (typeof PAGES)[number]['id'];
 
 export function App() {
-  const { state, events, connected } = useLiveData();
+  const { state, events, consoleLines, connected } = useLiveData();
   const [page, setPage] = useState<PageId>(() => (localStorage.getItem('page') as PageId | null) ?? 'dashboard');
   const [quit, setQuit] = useState(false);
 
@@ -57,7 +59,11 @@ export function App() {
           {state && <TikTokBadge state={state} />}
           <ActionButton
             kind="small"
-            confirm="本体を終了すると、配信の記録も止まります。終了しますか？"
+            confirm={
+              state?.minecraft.server.state === 'stopped' || !state
+                ? '本体を終了すると、配信の記録も止まります。終了しますか？'
+                : '本体を終了すると、配信の記録も止まります。Minecraftサーバーも止まります（ワールドを保存してから止めます）。終了しますか？'
+            }
             onClick={async () => {
               await api('POST', '/api/app/quit');
               setQuit(true);
@@ -84,6 +90,8 @@ export function App() {
           <SpinnerPage state={state} />
         ) : page === 'test' ? (
           <TestPanel state={state} />
+        ) : page === 'minecraft' ? (
+          <MinecraftPage state={state} consoleLines={consoleLines} />
         ) : page === 'records' ? (
           <RecordsPage state={state} />
         ) : page === 'overlays' ? (

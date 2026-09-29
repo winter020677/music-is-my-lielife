@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { api, formatDuration, formatNumber, formatTime, type AppState, type DisplayEvent } from '../api.ts';
 import { tiktokTone } from '../App.tsx';
 import { ActionButton, Card, Stat, StatusBadge, type Tone } from '../components/ui.tsx';
+import { ServerButtons, serverTone } from './Minecraft.tsx';
 
 export function Dashboard({ state, events }: { state: AppState; events: DisplayEvent[] }) {
   return (
@@ -62,6 +63,17 @@ function StatusRow({ state }: { state: AppState }) {
         <StatusBadge tone={mc.tone}>{mc.label}</StatusBadge>
         <p className="status-message">{state.minecraft.status.message}</p>
         {'hint' in state.minecraft.status && <p className="status-hint">{state.minecraft.status.hint}</p>}
+        {state.minecraft.server.configured && (
+          <>
+            <p className="status-message">
+              <StatusBadge tone={serverTone(state).tone}>サーバー：{serverTone(state).label}</StatusBadge>
+            </p>
+            {state.minecraft.server.hint && <p className="status-hint">{state.minecraft.server.hint}</p>}
+            <div className="button-row">
+              <ServerButtons state={state} />
+            </div>
+          </>
+        )}
       </Card>
 
       <Card title="読み上げ（VOICEVOX）">

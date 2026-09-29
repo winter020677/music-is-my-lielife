@@ -1008,3 +1008,53 @@ textarea {
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+/* ───── Minecraftのコンソール ───── */
+.console {
+  /* 高さ（行が増えたら中でスクロール） */
+  height: 460px;
+  overflow-y: auto;
+  padding: 10px 12px;
+  border-radius: 6px;
+  /* 黒っぽい背景に明るい文字（ふつうのコンソールと同じ見え方） */
+  background: #1e2029;
+  color: #d8dbe3;
+  font-family: "Consolas", "BIZ UDGothic", monospace;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.console-line {
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+/* サーバーのエラー出力 */
+.console-err {
+  color: #ff9b9b;
+}
+
+/* 自分が送ったコマンド */
+.console-in {
+  color: #8fd3ff;
+}
+
+/* 本体からのお知らせ（起動します、止まりました など） */
+.console-info {
+  color: #f2d27a;
+}
+
+.console-empty {
+  color: #8a8fa0;
+}
+
+.console-input {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.console-input input {
+  flex: 1;
+  font-family: "Consolas", "BIZ UDGothic", monospace;
+}

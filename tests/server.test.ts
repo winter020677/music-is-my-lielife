@@ -118,4 +118,14 @@ describe('Webサーバー', () => {
     expect((await inject('POST', '/api/queues/minecraft/resume', {})).json().queue.paused).toBe(false);
     expect((await inject('POST', '/api/queues/nothing/pause', {})).statusCode).toBe(404);
   });
+
+  it('Minecraftサーバー：フォルダが未設定なら起動できず、理由を返す（要件 M-3）', async () => {
+    const res = await inject('POST', '/api/minecraft/server/start', {});
+    expect(res.statusCode).toBe(400);
+    expect(res.json().error).toContain('サーバーのフォルダが未設定です');
+    expect((await inject('GET', '/api/state')).json().minecraft.server).toMatchObject({ state: 'stopped', configured: false });
+    expect((await inject('POST', '/api/minecraft/server/console', { line: 'list' })).json().error).toContain('動いていません');
+    expect((await inject('GET', '/api/minecraft/server/console')).json().lines).toEqual([]);
+    expect((await inject('POST', '/api/minecraft/server/stop', {})).json()).toEqual({ ok: true });
+  });
 });

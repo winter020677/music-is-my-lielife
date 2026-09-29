@@ -11,6 +11,7 @@ import { randomUUID } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { AlertService } from './actions/alerts.ts';
+import { MinecraftServerProcess, type ConsoleLine } from './actions/minecraft/serverProcess.ts';
 import { MinecraftService } from './actions/minecraft/service.ts';
 import { OverlayHub, type OverlaySocket } from './actions/overlayHub.ts';
 import { SpeechService } from './actions/voicevox.ts';
@@ -96,6 +97,7 @@ export class App {
   readonly media: MediaService;
   readonly spinner: SpinnerService;
   readonly minecraft: MinecraftService;
+  readonly minecraftServer: MinecraftServerProcess;
   readonly speech: SpeechService;
   readonly rule: RuleEngine;
   readonly backups: BackupManager;
@@ -108,6 +110,8 @@ export class App {
   private stateTimer: NodeJS.Timeout | null = null;
   private dailyTimer: NodeJS.Timeout | null = null;
   private quitHandler: (() => void) | null = null;
+  private pendingConsole: ConsoleLine[] = [];
+  private consoleTimer: NodeJS.Timeout | null = null;
 
   private constructor(options: {
     paths: AppPaths;
@@ -160,6 +164,13 @@ export class App {
       getPassword: () => this.secrets.get('MINECRAFT_RCON_PASSWORD'),
       log: log('Minecraft'),
     });
+    this.minecraftServer = new MinecraftServerProcess({
+      getSettings: () => this.settings.get().minecraft,
+      log: log('Minecraft'),
+      isConnectedElsewhere: () => this.minecraft.getStatus().state === 'connected',
+      // 起動が終わったら、RCONの再試行を待たずにすぐつなぐ
+      onReady: () => this.minecraft.restart(),
+    });
     this.speech = new SpeechService({ getSettings: () => this.settings.get().voicevox, hub: this.hub, log: log('読み上げ') });
     this.rule = new RuleEngine({
       getSettings: () => this.settings.get(),
@@ -183,6 +194,8 @@ export class App {
     this.watcher.onStatus(changed);
     this.euler.onChange(changed);
     this.minecraft.onChange(changed);
+    this.minecraftServer.onChange(changed);
+    this.minecraftServer.onLine((line) => this.pushConsoleLine(line));
     this.speech.onChange(changed);
     this.hub.onChange(changed);
     for (const queue of [this.alerts.queue, this.media.queue, this.spinner.queue, this.minecraft.queue, this.speech.queue]) {
@@ -248,6 +261,9 @@ export class App {
   async stop(): Promise<void> {
     if (this.stateTimer) clearTimeout(this.stateTimer);
     if (this.dailyTimer) clearInterval(this.dailyTimer);
+    if (this.consoleTimer) clearTimeout(this.consoleTimer);
+    // サーバーを先に止めて、ワールドを保存させる
+    await this.minecraftServer.stop().catch(() => {});
     await this.watcher.shutdown().catch(() => {});
     this.minecraft.stop();
     this.speech.stop();
@@ -460,6 +476,19 @@ export class App {
     }
   }
 
+  /** サーバーのコンソールの行は、まとめて少しあとに送る（起動中は一度にたくさん出るため） */
+  private pushConsoleLine(line: ConsoleLine): void {
+    if (this.adminSockets.size === 0) return;
+    this.pendingConsole.push(line);
+    if (this.consoleTimer) return;
+    this.consoleTimer = setTimeout(() => {
+      this.consoleTimer = null;
+      const lines = this.pendingConsole;
+      this.pendingConsole = [];
+      this.broadcastAdmin({ type: 'console', lines });
+    }, 100);
+  }
+
   /** 状態の知らせは、まとめて少しあとに送る（変化が続いても送りすぎないように） */
   private scheduleStatePush(): void {
     if (this.stateTimer || this.adminSockets.size === 0) return;
@@ -495,7 +524,11 @@ export class App {
         roomId: this.recorder.currentRoomId,
       },
       euler: this.euler.snapshot(),
-      minecraft: { status: this.minecraft.getStatus(), recent: this.minecraft.recentResults() },
+      minecraft: {
+        status: this.minecraft.getStatus(),
+        recent: this.minecraft.recentResults(),
+        server: this.minecraftServer.getStatus(),
+      },
       speech: this.speech.getStatus(),
       overlays: this.hub.counts(),
       queues: [

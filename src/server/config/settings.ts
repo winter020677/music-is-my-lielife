@@ -56,6 +56,14 @@ export const settingsSchema = z.object({
     playerName: text('', 40),
     /** 1秒あたりに送るコマンドの上限（要件 Q-3） */
     maxCommandsPerSecond: int(10, 1, 100),
+    /** サーバーの起動・停止（要件 M-3）：Paperの jar があるフォルダ（空なら起動ボタンは使えない） */
+    serverFolder: text('', 500),
+    /** 起動する jar ファイルの名前（空ならフォルダの中から自動で探す） */
+    jarFile: text('', 200),
+    /** サーバーに使わせるメモリ（GB） */
+    memoryGb: int(4, 1, 64),
+    /** java の場所（空か java なら、PCに入っている Java を使う） */
+    javaPath: text('java', 500),
   }),
 
   /** 読み上げ（VOICEVOX）（要件 A-4） */

@@ -48,7 +48,7 @@ TikTok LIVE配信用の、利用者本人だけが使うツール。STE（Stream
 - `src/server/tiktok/` TikTok接続。ライブラリを使うのは `connectorClient.ts` だけ（要件 N-6）。`normalize.ts` がデータの形をそろえる
   - `liveWatcher.ts` 配信待ち・自動接続・再接続 ／ `eulerUsage.ts` Euler Streamの回数 ／ `giftStreaks.ts` 連打ギフト ／ `pipeline.ts` 二重処理の防止
 - `src/server/db/` 記録。表の構造は `migrations.ts`（変える時は新しい版を**追加**し、docs/database.md も更新）。書き込みは `recorder.ts`
-- `src/server/actions/` オーバーレイ（WebSocket）・Minecraft（RCON）・読み上げ（VOICEVOX）・アラート・メディア（`media.ts`／置き場は `mediaStore.ts`）・スピナー（`spinner.ts`）・イベント一覧のタイル（`tiles.ts`）
+- `src/server/actions/` オーバーレイ（WebSocket）・Minecraft（RCON。サーバーの起動・停止とコンソールは `minecraft/serverProcess.ts`）・読み上げ（VOICEVOX）・アラート・メディア（`media.ts`／置き場は `mediaStore.ts`）・スピナー（`spinner.ts`）・イベント一覧のタイル（`tiles.ts`）
 - `src/server/rules/engine.ts` ルールの実行（きっかけ→やること）。形の定義は `src/server/config/rules.ts`、種類の名前は `ruleLabels.ts`（管理画面と共用）
 - `src/server/core/` 置き換え記号（`template.ts`）・無害化（`sanitize.ts`）・順番待ち（`queue.ts`）など
 - `src/server/web/server.ts` Webサーバーと管理画面のAPI ／ `src/admin/` 管理画面（React）
@@ -78,12 +78,14 @@ TikTok LIVE配信用の、利用者本人だけが使うツール。STE（Stream
 - オーバーレイの見た目（要件 O-6）は、`style.css` に直接書いた値を残したまま、変えられるところだけ `var(--名前, その値)` にしてある。管理画面で決めた値は `overlay-client.js` が `<style>` を足して上から効かせる。何も決めていなければ `style.css` のまま
 - 「テスト」ボタン（要件 U-4）は、テストのイベントを**流さずに**作って、そのルールの「やること」だけを動かす。流すと、ほかのルールまで動いてしまうため
 - イベント一覧のタイル（要件 O-10）は保存せず、今のセットのルールとギフト一覧から毎回作る（`tiles.ts`）
+- Minecraftサーバーの起動（要件 M-3）は、本体が `java -Xms/-Xmx -jar <jar> nogui` を子プロセスとして直接動かす（start.bat は使わない。黒い画面を出さず、出力を管理画面に流し、標準入力でコマンドを送るため）。jar は設定の名前、空ならフォルダの中の1つ／paper で始まる1つ。停止は `stop` を送り、60秒で止まらなければ強制終了。「Done (…)!」が出たらRCONをすぐつなぎ直す
+- Windowsでは本体が終わると子のサーバーも道連れで止まるので、本体の終了時はサーバーを先に `stop` で止める（その間は強制終了までの猶予を90秒に延ばす）。RCONでつながっている（＝本体の外で起動した）サーバーがある時は、二重起動を防ぐため起動ボタンを断る
 
 ## 進み具合
 
 - 要件定義書：v2（配信データの記録と分析を追加）
 - 今のフェーズ：フェーズ0（試作）を実装済み。利用者のPCでの確認（短いテスト配信）待ち
-  - フェーズ1の実装は一通り済み：ルール（R-1〜R-7）・やること（A-1〜A-6）・順番待ち（Q-1〜Q-3）・スピナー（S-1〜S-5）・オーバーレイ（O-1〜O-8、O-10〜O-13）・管理画面（U-1〜U-6）
+  - フェーズ1の実装は一通り済み：ルール（R-1〜R-7）・やること（A-1〜A-6）・順番待ち（Q-1〜Q-3）・スピナー（S-1〜S-5）・オーバーレイ（O-1〜O-8、O-10〜O-13）・Minecraft（M-1〜M-3）・管理画面（U-1〜U-6）
   - 残っているのは、利用者のPCでの確認と、STEからのルール・素材の移し替え（フェーズ1の完了条件は「STEと1〜2週間並行して使い、問題がなければSTEを解約」）
   - クラウド上のClaude Codeで作ったため、本物のTikTok・OBS・Minecraft・VOICEVOXとの確認はまだ（にせもののサーバーを使った自動テストと、画面の表示は確認済み）
   - 確認の手順は README の「フェーズ0の確認」。結果（入室の通知が届く割合、Euler Streamの使用回数）を要件定義書のフェーズ0に書き足す

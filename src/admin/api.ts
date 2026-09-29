@@ -1,10 +1,11 @@
 // 管理画面から本体への問い合わせ
 
 import { useEffect, useRef, useState } from 'react';
+import type { ConsoleLine } from '../server/actions/minecraft/serverProcess.ts';
 import type { AppState, DisplayEvent, RuleRunNotice } from '../server/app.ts';
 import type { LogEntry } from '../server/core/logger.ts';
 
-export type { AppState, DisplayEvent, LogEntry, RuleRunNotice };
+export type { AppState, ConsoleLine, DisplayEvent, LogEntry, RuleRunNotice };
 export type Settings = AppState['settings'];
 
 /** 本体のAPIを呼ぶ。失敗したら日本語のエラーを投げる */
@@ -27,7 +28,18 @@ export async function api<T = unknown>(method: 'GET' | 'POST' | 'PUT', path: str
 export interface LiveData {
   state: AppState | null;
   events: DisplayEvent[];
+  /** Minecraftサーバーのコンソール（要件 M-3） */
+  consoleLines: ConsoleLine[];
   connected: boolean;
+}
+
+const CONSOLE_LIMIT = 1000;
+
+/** 手元の行に、新しい行を足す（同じ行を二重に足さない） */
+function mergeConsole(prev: ConsoleLine[], next: ConsoleLine[]): ConsoleLine[] {
+  const lastId = prev.length > 0 ? prev[prev.length - 1].id : 0;
+  const added = next.filter((line) => line.id > lastId);
+  return added.length === 0 ? prev : [...prev, ...added].slice(-CONSOLE_LIMIT);
 }
 
 /**
@@ -37,6 +49,7 @@ export interface LiveData {
 export function useLiveData(): LiveData {
   const [state, setState] = useState<AppState | null>(null);
   const [events, setEvents] = useState<DisplayEvent[]>([]);
+  const [consoleLines, setConsoleLines] = useState<ConsoleLine[]>([]);
   const [connected, setConnected] = useState(false);
   const retry = useRef(0);
 
@@ -50,13 +63,20 @@ export function useLiveData(): LiveData {
       socket.onopen = () => {
         retry.current = 0;
         setConnected(true);
+        // つながるたびに、それまでのコンソールの行を取り直す（本体が再起動していると番号が振り直されるため）。
+        // 取っている間に届いた行は、取った行のうしろに足す
+        setConsoleLines([]);
+        api<{ lines: ConsoleLine[] }>('GET', '/api/minecraft/server/console')
+          .then((r) => setConsoleLines((prev) => mergeConsole(r.lines, prev)))
+          .catch(() => {});
       };
       socket.onmessage = (e) => {
         const message = JSON.parse(String(e.data)) as
           | { type: 'state'; state: AppState }
           | { type: 'event'; event: DisplayEvent }
           | { type: 'ruleRun'; run: RuleRunNotice }
-          | { type: 'log'; entry: LogEntry };
+          | { type: 'log'; entry: LogEntry }
+          | { type: 'console'; lines: ConsoleLine[] };
         if (message.type === 'state') {
           setState(message.state);
           setEvents((prev) => (prev.length === 0 ? message.state.events : prev));
@@ -64,6 +84,8 @@ export function useLiveData(): LiveData {
           setEvents((prev) => [message.event, ...prev].slice(0, 200));
         } else if (message.type === 'ruleRun') {
           setState((prev) => (prev ? { ...prev, ruleRuns: [message.run, ...prev.ruleRuns].slice(0, 30) } : prev));
+        } else if (message.type === 'console') {
+          setConsoleLines((prev) => mergeConsole(prev, message.lines));
         } else if (message.type === 'log') {
           setState((prev) => (prev ? { ...prev, problems: [message.entry, ...prev.problems].slice(0, 20) } : prev));
         }
@@ -84,7 +106,7 @@ export function useLiveData(): LiveData {
     };
   }, []);
 
-  return { state, events, connected };
+  return { state, events, consoleLines, connected };
 }
 
 // ───────── 表示の道具 ─────────
