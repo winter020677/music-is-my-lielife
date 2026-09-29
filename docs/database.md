@@ -147,7 +147,7 @@ Claude Codeに「先月の常連を教えて」などと頼む時は、このフ
 
 ### gift_catalog（ギフトの一覧）
 
-`gift_id`, `name`, `display_name`（自分で付けた表示名）, `coins`, `image_url`, `streakable`（1＝連打できる）, `updated_at`。届いたギフトから自動で作られる。
+`gift_id`, `name`, `display_name`（自分で付けた表示名。管理画面の「ルール」で変えられる）, `coins`, `image_url`, `streakable`（1＝連打できる）, `updated_at`。届いたギフトから自動で作られる。
 
 ### daily_counters（日ごとの回数）
 

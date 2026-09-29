@@ -723,6 +723,191 @@ textarea {
   text-align: center;
 }
 
+/* ───── ルールの画面 ───── */
+.set-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.set-bar select {
+  min-width: 220px;
+}
+
+/* 無効にしたルールは、うすく見せる */
+.card.rule-off {
+  opacity: 0.55;
+}
+
+.rule-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.rule-title input[type='checkbox'] {
+  width: 16px;
+  height: 16px;
+}
+
+.rule-name {
+  width: 220px;
+  font-weight: 600;
+}
+
+.rule-section {
+  margin: 16px 0 8px;
+  font-size: 14px;
+  color: #232838;
+}
+
+.rule-footer {
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid #eceef3;
+}
+
+/* やること1つ分の箱 */
+.action-box {
+  margin: 8px 0;
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid #e1e4eb;
+  background: #f6f7fa;
+}
+
+.action-box-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+
+.action-box-head strong {
+  margin-right: auto;
+}
+
+.check-inline {
+  margin: 0;
+  font-size: 12px;
+  color: #8a8fa0;
+}
+
+/* ギフトを選ぶところ */
+.gift-picker {
+  border: 1px solid #e1e4eb;
+  border-radius: 8px;
+  background: #ffffff;
+  padding: 8px;
+}
+
+.gift-picker-head {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.gift-picker-head input {
+  flex: 1;
+}
+
+.gift-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(104px, 1fr));
+  gap: 8px;
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+.gift-item {
+  position: relative;
+  border: 1px solid #e1e4eb;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.gift-item-on {
+  border-color: #2563eb;
+  background: #eff4ff;
+}
+
+.gift-pick {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  width: 100%;
+  padding: 8px 4px;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  font: inherit;
+}
+
+.gift-pick img {
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+}
+
+.gift-noimage {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 6px;
+  background: #f3f4f7;
+  color: #8a8fa0;
+}
+
+.gift-name {
+  font-size: 12px;
+  text-align: center;
+  word-break: break-word;
+}
+
+.gift-coins {
+  font-size: 11px;
+  color: #8a8fa0;
+}
+
+/* 表示名を変えるボタン（ギフトの右上） */
+.gift-rename {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  padding: 1px 4px;
+  font-size: 10px;
+  border: 1px solid #e1e4eb;
+  border-radius: 4px;
+  background: #ffffff;
+  color: #8a8fa0;
+  cursor: pointer;
+}
+
+.gift-rename:hover {
+  color: #232838;
+}
+
+.template-hints {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+}
+
+.template-hints code {
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: #f3f4f7;
+  font-size: 12px;
+}
+
 /* ───── 画面がせまい時 ───── */
 @media (max-width: 1200px) {
   .status-row {

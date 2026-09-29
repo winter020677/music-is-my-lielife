@@ -49,7 +49,7 @@ TikTok LIVE配信用の、利用者本人だけが使うツール。STE（Stream
   - `liveWatcher.ts` 配信待ち・自動接続・再接続 ／ `eulerUsage.ts` Euler Streamの回数 ／ `giftStreaks.ts` 連打ギフト ／ `pipeline.ts` 二重処理の防止
 - `src/server/db/` 記録。表の構造は `migrations.ts`（変える時は新しい版を**追加**し、docs/database.md も更新）。書き込みは `recorder.ts`
 - `src/server/actions/` オーバーレイ（WebSocket）・Minecraft（RCON）・読み上げ（VOICEVOX）・アラート
-- `src/server/rules/phase0GiftRule.ts` フェーズ0の試作ルール（フェーズ1でルールの仕組みに置き換える）
+- `src/server/rules/engine.ts` ルールの実行（きっかけ→やること）。形の定義は `src/server/config/rules.ts`、種類の名前は `ruleLabels.ts`（管理画面と共用）
 - `src/server/core/` 置き換え記号（`template.ts`）・無害化（`sanitize.ts`）・順番待ち（`queue.ts`）など
 - `src/server/web/server.ts` Webサーバーと管理画面のAPI ／ `src/admin/` 管理画面（React）
 - `overlays/` オーバーレイ（素のHTML/CSS/JS。新しいものは `_template` をコピー）
@@ -69,12 +69,15 @@ TikTok LIVE配信用の、利用者本人だけが使うツール。STE（Stream
 - 置き換え記号の `{coins}` は「ギフト1個あたりのコイン数」にした。STEの説明（「送られたギフトのコイン数」）では1個あたりか合計かが分からず、利用者も分からないため。合計が欲しい時は `{mult:{coins} {giftcount}}` と書ける。STEのコマンドを移す時に違いが見つかったら直す
 - GitHubのリポジトリ名は `tiktok-live-tool`（2026-09-29 に music-is-my-lielife から変更済み。古い名前のURLはGitHubが自動で転送するので、変更前にクローンしたフォルダもそのまま使える）
 - 入室は TikTok の member メッセージの action が 1（入室）か 0（不明）のものを数える
-- フェーズ0のギフトの反応は、設定の `phase0.giftReaction`（アラート・Minecraftのコマンド・読み上げ）。フェーズ1でルールの仕組みに移す
+- ルールは設定の `rules.sets[]`（セットごとにルールの配列）。`rules.activeSetId` で切り替える（要件 R-7）。フェーズ0の `phase0.giftReaction` は、設定を読む時に「ギフトの反応」というルール1つへ自動で移し替える（`migrateSettings`、schemaVersion 1→2）
+- ギフトの表示名（要件 R-4）は設定ではなく、データベースの `gift_catalog.display_name` に持つ。ギフトの名前・アイコン・コイン数と同じ場所にまとまっていた方が探しやすいため。管理画面の「ルール」からその場で変えられる
+- `{index}` と `{repetition}` は、Minecraftのやること1つの中の「くり返し回数」を指す。ルールの「ギフトの個数分くり返す」（R-5）は外側のくり返しで、記号には出さない（STEに合わせた）
 
 ## 進み具合
 
 - 要件定義書：v2（配信データの記録と分析を追加）
 - 今のフェーズ：フェーズ0（試作）を実装済み。利用者のPCでの確認（短いテスト配信）待ち
+  - フェーズ1のうち、ルールの仕組み（R-1〜R-7）・置き換え記号（A-3）・アラート／Minecraft／読み上げのやること（A-2・A-4・A-6）・管理画面の「ルール」を実装済み。残りはメディア（A-1）・スピナー（S-1〜S-5）・オーバーレイ（O）・順番待ちの画面（Q-2）など
   - クラウド上のClaude Codeで作ったため、本物のTikTok・OBS・Minecraft・VOICEVOXとの確認はまだ（にせもののサーバーを使った自動テストと、画面の表示は確認済み）
   - 確認の手順は README の「フェーズ0の確認」。結果（入室の通知が届く割合、Euler Streamの使用回数）を要件定義書のフェーズ0に書き足す
 - 決まったこと・分かったことは、このファイルか要件定義書に追記して残す

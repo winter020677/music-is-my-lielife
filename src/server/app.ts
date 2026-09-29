@@ -27,7 +27,7 @@ import { openDatabase, type Db } from './db/database.ts';
 import { migrate, pendingMigrations } from './db/migrations.ts';
 import { daySummary } from './db/queries.ts';
 import { Recorder, type RuleRunRecord } from './db/recorder.ts';
-import { Phase0GiftRule } from './rules/phase0GiftRule.ts';
+import { RuleEngine } from './rules/engine.ts';
 import type { TikTokClient } from './tiktok/client.ts';
 import { ConnectorClient } from './tiktok/connectorClient.ts';
 import { EulerUsage } from './tiktok/eulerUsage.ts';
@@ -89,7 +89,7 @@ export class App {
   readonly alerts: AlertService;
   readonly minecraft: MinecraftService;
   readonly speech: SpeechService;
-  readonly rule: Phase0GiftRule;
+  readonly rule: RuleEngine;
   readonly backups: BackupManager;
 
   private readonly adminSockets = new Set<AdminSocket>();
@@ -150,7 +150,7 @@ export class App {
       log: log('Minecraft'),
     });
     this.speech = new SpeechService({ getSettings: () => this.settings.get().voicevox, hub: this.hub, log: log('読み上げ') });
-    this.rule = new Phase0GiftRule({
+    this.rule = new RuleEngine({
       getSettings: () => this.settings.get(),
       alerts: this.alerts,
       minecraft: this.minecraft,
