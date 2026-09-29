@@ -158,6 +158,7 @@ Claude Codeに「先月の常連を教えて」などと頼む時は、このフ
 | `euler.〇〇` | Euler Streamへのリクエスト（〇〇は使った処理。`fetchSignedWebSocketFromProvider`＝接続の署名、`fetchRoomIdFromProvider`＝配信中かの確認） |
 | `liveCheck.html` / `liveCheck.api` / `liveCheck.euler` / `liveCheck.failed` | 配信待ちの確認（TikTokのページ / TikTokのAPI / Euler Stream / 失敗） |
 | `connect.ok` / `connect.failed` / `connect.dropped` / `connect.offline` | 接続できた / 失敗 / 途中で切れた / 配信していなかった |
+| `eulerInfo.rateLimits` | Euler Streamに残り回数を聞いた回数（使用回数とは別に数えている） |
 | `tiktok.duplicate` | 二重に届いたので捨てたメッセージ |
 
 ## よく使う調べ方（例）

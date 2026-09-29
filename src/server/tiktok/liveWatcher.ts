@@ -318,7 +318,11 @@ export class LiveWatcher {
   async refreshRateLimits(): Promise<void> {
     try {
       const limits = await this.d.client.fetchRateLimits();
-      if (limits) this.d.euler.setRemote(limits);
+      if (limits) {
+        // 残り回数の問い合わせは、使用回数（euler.〜）とは別に数える
+        this.d.counters.increment('eulerInfo.rateLimits');
+        this.d.euler.setRemote(limits);
+      }
     } catch (err) {
       this.d.log.warn(`Euler Streamの残り回数を確認できませんでした: ${describeError(err)}`);
     }

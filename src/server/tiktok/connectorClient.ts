@@ -62,6 +62,19 @@ function wrapEulerRoutes(): void {
   }
   IsLiveRouteConfig.skipFetchRoomIdFromEulerRoute = true;
   RoomIdRouteConfig.skipFetchRoomIdFromEulerRoute = true;
+
+  // 接続の時に取る「配信の情報」（開始時刻など）が取れなくても、接続は続ける
+  // （配信中なのは、先に確かめてあるため。開始時刻は「推定」になる）
+  const originalRoomInfo = routes.fetchRoomInfo;
+  if (typeof originalRoomInfo === 'function') {
+    routes.fetchRoomInfo = async (args: unknown) => {
+      try {
+        return await originalRoomInfo(args);
+      } catch {
+        return { data: {} };
+      }
+    };
+  }
 }
 
 export class ConnectorClient implements TikTokClient {

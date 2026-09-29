@@ -37,6 +37,9 @@ function StatusRow({ state }: { state: AppState }) {
         <StatusBadge tone={tiktok.tone}>{tiktok.label}</StatusBadge>
         <p className="status-message">{status.message}</p>
         {status.state === 'error' && <p className="status-hint">{status.hint}</p>}
+        {!state.secrets.EULER_API_KEY && status.state !== 'error' && (
+          <p className="status-hint">Euler StreamのAPIキーが未設定です（「設定」→「秘密情報」）。配信が始まってもつなげません</p>
+        )}
         <p className="muted small">
           {state.tiktok.username ? `@${state.tiktok.username.replace(/^@/, '')}` : 'ユーザー名：未設定'}
           {state.tiktok.viewers !== null && `　視聴者 ${formatNumber(state.tiktok.viewers)}人`}
