@@ -1,0 +1,16 @@
+# 改行コードの扱い
+# ふだんは自動（Gitに任せる）
+* text=auto
+
+# Windowsで動かすスクリプトは、必ずCRLF（Windowsの改行）にする
+# （LFだけだと、バッチファイルが正しく動かないことがあるため）
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.vbs text eol=crlf
+*.ps1 text eol=crlf
+
+# 画像などはそのまま扱う
+*.png binary
+*.ico binary
+*.db binary
+*.wav binary

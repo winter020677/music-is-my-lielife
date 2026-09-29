@@ -1,0 +1,736 @@
+/*
+  管理画面の見た目
+  ・配信中に見る画面なので、落ち着いた色にしています（動きはオーバーレイ側に集中させる）
+  ・色や大きさは値を直接書いています。変えたい所を書き換えてOKです
+    （書き換えたら setup.bat を実行し直すと反映されます）
+*/
+
+/* ───── 全体 ───── */
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  /* 画面の背景（うすい灰色） */
+  background: #f3f4f7;
+  color: #23262f;
+  font-family: "Yu Gothic UI", "Meiryo", "Hiragino Sans", sans-serif;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+h2 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+h3 {
+  margin: 18px 0 8px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #4a4f5c;
+}
+
+code {
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: #eceef3;
+  font-family: "Consolas", "BIZ UDGothic", monospace;
+  font-size: 13px;
+  word-break: break-all;
+}
+
+.muted {
+  color: #6b7080;
+}
+
+.small {
+  font-size: 12px;
+}
+
+.ok-text {
+  color: #1f8a4c;
+  font-weight: 700;
+}
+
+/* ───── 上のバー ───── */
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 10px 20px;
+  /* バーの色（濃い紺） */
+  background: #232838;
+  color: #ffffff;
+}
+
+.topbar-title {
+  font-size: 16px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.tabs {
+  display: flex;
+  gap: 4px;
+  flex: 1;
+}
+
+.tab {
+  padding: 6px 14px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: #c9cdd8;
+  font: inherit;
+  cursor: pointer;
+}
+
+.tab:hover {
+  background: #33394d;
+  color: #ffffff;
+}
+
+/* 選んでいるタブ */
+.tab-active {
+  background: #ffffff;
+  color: #232838;
+  font-weight: 700;
+}
+
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* ───── お知らせの帯 ───── */
+.banner {
+  padding: 10px 20px;
+  font-weight: 700;
+}
+
+.banner-red {
+  background: #fde8e8;
+  color: #b42323;
+}
+
+/* ───── 中身 ───── */
+.content {
+  padding: 16px 20px 40px;
+}
+
+/* カード（白い箱） */
+.card {
+  background: #ffffff;
+  border: 1px solid #e1e4eb;
+  border-radius: 10px;
+  min-width: 0;
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 14px;
+  border-bottom: 1px solid #eceef3;
+}
+
+.card-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.card-body {
+  padding: 12px 14px;
+}
+
+.page-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 1200px;
+}
+
+.page-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+}
+
+.page-column {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* ───── ダッシュボード ───── */
+.dashboard {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* 上の段：状態のカードを横に並べる */
+.status-row {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.status-message {
+  margin: 6px 0 0;
+}
+
+/* 直し方の説明（エラーの時） */
+.status-hint {
+  margin: 4px 0 0;
+  color: #b45309;
+  font-size: 12px;
+}
+
+.dashboard-main {
+  display: grid;
+  grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+  gap: 16px;
+  align-items: start;
+}
+
+.dashboard-side {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* 直近のイベントの一覧 */
+.events-card .card-body {
+  max-height: 640px;
+  overflow-y: auto;
+}
+
+.event-list,
+.run-list,
+.problem-list,
+.command-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.event {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 0;
+  border-bottom: 1px solid #f0f1f5;
+}
+
+.event-time {
+  color: #8a8fa0;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* イベントの種類のラベル */
+.event-kind {
+  min-width: 64px;
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: #eceef3;
+  font-size: 12px;
+  font-weight: 700;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.kind-gift {
+  background: #fff1c2;
+  color: #8a5a00;
+}
+
+.kind-like {
+  background: #ffe3ea;
+  color: #b4234d;
+}
+
+.kind-comment {
+  background: #e3efff;
+  color: #1f4fa8;
+}
+
+.kind-follow,
+.kind-subscribe {
+  background: #e2f6ea;
+  color: #1f7a45;
+}
+
+.kind-share {
+  background: #efe6ff;
+  color: #6534b8;
+}
+
+.kind-join {
+  background: #eef0f4;
+  color: #555b6b;
+}
+
+.kind-end {
+  background: #232838;
+  color: #ffffff;
+}
+
+.event-image {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.event-name {
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 180px;
+}
+
+.event-detail {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* 小さな印（テスト・遅れて届いた など） */
+.tag {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 0 6px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.tag-test {
+  background: #e8e1ff;
+  color: #5b3fc4;
+}
+
+.tag-late {
+  background: #fff0d6;
+  color: #9a5b00;
+}
+
+.tag-live {
+  background: #ffe3ea;
+  color: #c0264f;
+}
+
+.run-list li,
+.problem-list li,
+.command-list li {
+  padding: 5px 0;
+  border-bottom: 1px solid #f0f1f5;
+}
+
+.run-list li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.run-message {
+  width: 100%;
+  color: #b42323;
+  font-size: 12px;
+}
+
+.problem-warn {
+  color: #9a5b00;
+}
+
+.problem-error {
+  color: #b42323;
+}
+
+.problem-area {
+  font-weight: 700;
+}
+
+.command-error code {
+  background: #fde8e8;
+}
+
+/* 順番待ちの表 */
+.queue-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.queue-table th {
+  width: 84px;
+  text-align: left;
+  vertical-align: top;
+  padding: 6px 0;
+}
+
+.queue-table td {
+  padding: 6px 4px;
+  vertical-align: top;
+}
+
+.queue-buttons {
+  text-align: right;
+  white-space: nowrap;
+}
+
+/* ───── 数字の表示 ───── */
+.stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 10px;
+}
+
+.stat {
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: #f6f7fa;
+}
+
+.stat-value {
+  font-size: 20px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.stat-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: #4a4f5c;
+}
+
+/* 何を数えたものかの説明 */
+.stat-note {
+  font-size: 11px;
+  color: #8a8fa0;
+}
+
+/* 使った量のバー（Euler Stream） */
+.meter {
+  height: 10px;
+  border-radius: 999px;
+  background: #eceef3;
+  overflow: hidden;
+}
+
+.meter-fill {
+  height: 100%;
+  background: #3b82f6;
+}
+
+/* 8割を超えたらオレンジ */
+.meter-warn .meter-fill {
+  background: #f59e0b;
+}
+
+/* ───── 状態の丸 ───── */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.badge-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.badge-gray {
+  background: #eceef3;
+  color: #555b6b;
+}
+
+.badge-gray .badge-dot {
+  background: #9aa0ad;
+}
+
+.badge-blue {
+  background: #e3efff;
+  color: #1f4fa8;
+}
+
+.badge-blue .badge-dot {
+  background: #3b82f6;
+}
+
+.badge-yellow {
+  background: #fff4d1;
+  color: #8a5a00;
+}
+
+.badge-yellow .badge-dot {
+  background: #f59e0b;
+}
+
+.badge-green {
+  background: #e2f6ea;
+  color: #1f7a45;
+}
+
+.badge-green .badge-dot {
+  background: #22a95b;
+}
+
+.badge-red {
+  background: #fde8e8;
+  color: #b42323;
+}
+
+.badge-red .badge-dot {
+  background: #e23c3c;
+}
+
+/* ───── ボタン ───── */
+.button {
+  display: inline-block;
+  padding: 7px 16px;
+  border: 1px solid #cfd3dd;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #23262f;
+  font: inherit;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.button:hover {
+  background: #f3f4f7;
+}
+
+.button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+/* 大事なボタン（青） */
+.button-primary {
+  border-color: #2563eb;
+  background: #2563eb;
+  color: #ffffff;
+}
+
+.button-primary:hover {
+  background: #1d4fd0;
+}
+
+.button-danger {
+  border-color: #dc2626;
+  background: #dc2626;
+  color: #ffffff;
+}
+
+/* 小さいボタン */
+.button-small {
+  padding: 3px 10px;
+  font-size: 12px;
+}
+
+.topbar .button-small {
+  border-color: #4a5168;
+  background: #33394d;
+  color: #ffffff;
+}
+
+.button-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.action {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.action-error {
+  color: #b42323;
+  font-size: 12px;
+}
+
+.copy {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ───── 入力欄 ───── */
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 12px;
+  flex: 1;
+}
+
+.field-label {
+  font-weight: 700;
+}
+
+.field-hint {
+  color: #8a8fa0;
+  font-size: 12px;
+}
+
+.field-row {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.field-button {
+  padding-top: 26px;
+}
+
+input[type="text"],
+input:not([type]),
+input[type="number"],
+input[type="password"],
+select,
+textarea {
+  width: 100%;
+  padding: 7px 10px;
+  border: 1px solid #cfd3dd;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #23262f;
+  font: inherit;
+}
+
+textarea {
+  font-family: "Consolas", "BIZ UDGothic", monospace;
+}
+
+.check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+  cursor: pointer;
+}
+
+.inline-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+}
+
+/* 設定画面の「保存」の帯（画面の上にくっつく） */
+.save-bar {
+  position: sticky;
+  top: 52px;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border: 1px solid #e1e4eb;
+  border-radius: 10px;
+  background: #ffffff;
+}
+
+/* ───── 表 ───── */
+.table-wrap {
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.table th,
+.table td {
+  padding: 6px 10px;
+  border-bottom: 1px solid #eceef3;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.table th {
+  background: #f6f7fa;
+  font-weight: 700;
+}
+
+.table .num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.row-test {
+  color: #8a8fa0;
+}
+
+.kv th {
+  padding: 4px 16px 4px 0;
+  text-align: left;
+  white-space: nowrap;
+  vertical-align: top;
+}
+
+.kv td {
+  padding: 4px 0;
+}
+
+.steps {
+  margin: 0 0 8px;
+  padding-left: 20px;
+}
+
+/* 「終了」を押した後の画面 */
+.quit-screen {
+  max-width: 640px;
+  margin: 80px auto;
+  padding: 32px;
+  border-radius: 12px;
+  background: #ffffff;
+  border: 1px solid #e1e4eb;
+  text-align: center;
+}
+
+/* ───── 画面がせまい時 ───── */
+@media (max-width: 1200px) {
+  .status-row {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .dashboard-main,
+  .page-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

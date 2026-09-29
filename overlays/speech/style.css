@@ -1,0 +1,35 @@
+/*
+  読み上げ用オーバーレイの見た目
+  ふだんは何も表示しない（音だけ）。?debug=1 の時だけ、読み上げている文を出す。
+*/
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  overflow: hidden;
+  font-family: "Hiragino Sans", "Yu Gothic UI", "Meiryo", sans-serif;
+}
+
+/* 確認用：読み上げている文 */
+#debug {
+  margin: 8px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.7);
+  color: #ffffff;
+  font-size: 20px;
+}
+
+/* ふつうのブラウザで開いた時だけ出るボタン（ブラウザは、クリックするまで音を出させてくれないため） */
+#unlock {
+  margin: 8px;
+  padding: 10px 16px;
+  font-size: 16px;
+  border: none;
+  border-radius: 8px;
+  background: #ffd54a;
+  color: #222222;
+  cursor: pointer;
+}

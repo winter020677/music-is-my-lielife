@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
+  <!-- デスクトップのアイコンのもと（assets/app.ico はこれから作った） -->
+  <rect x="8" y="8" width="240" height="240" rx="56" fill="#232838"/>
+  <circle cx="128" cy="128" r="72" fill="#ff4d6d"/>
+  <path d="M110 92 L170 128 L110 164 Z" fill="#ffffff"/>
+</svg>

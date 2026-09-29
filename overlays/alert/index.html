@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <title>アラート</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!--
+    アラート用オーバーレイ（ギフトなどが来た時に、画面の上に出る）
+    OBSの「ブラウザ」ソースに、次のURLを入れて使う：
+      http://127.0.0.1:3939/overlay/alert/
+    おすすめの大きさ：幅 1920 × 高さ 1080（配信の画面と同じ）
+  -->
+  <div id="stage"></div>
+
+  <!-- アラート1つ分のひな形（script.js がコピーして使う） -->
+  <template id="alert-template">
+    <div class="alert">
+      <img class="alert-avatar" alt="">
+      <div class="alert-text">
+        <div class="alert-title"></div>
+        <div class="alert-message"></div>
+      </div>
+      <img class="alert-image" alt="">
+    </div>
+  </template>
+
+  <script src="/overlay/common/overlay-client.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>

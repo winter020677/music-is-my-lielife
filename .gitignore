@@ -1,7 +1,22 @@
+# 秘密情報（APIキー・パスワード）は絶対にGitに入れない
 .env
-.venv/
-__pycache__/
-*.pyc
-*.pyo
+.env.*
+!.env.example
+
+# 依存パッケージとビルド結果（setup.bat で作り直せる）
+node_modules/
+dist/
+
+# 開発中にプロジェクト内へ作られるデータ（本番のデータは別フォルダ。README参照）
+data/
+
+# テストの一時ファイル
+coverage/
+*.tmp
+
+# OSやエディタのファイル
 .DS_Store
-.cache
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
