@@ -1,0 +1,118 @@
+/*
+  イベント一覧の見た目
+  ・色や大きさは、値を直接書いています。好きな値に書き換えてOKです
+  ・var(--名前, 値) のところは、管理画面の「オーバーレイ」→「見た目」でも変えられます
+  ・書き換えたら、管理画面の「オーバーレイ」→「全部を再読み込み」で反映されます
+  ・タイルごとの背景色は「ルール」画面で決めます（決めていなければ下の色）
+*/
+
+/* ページ全体：背景は透明（OBSで配信の画面に重ねるため） */
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  overflow: hidden;
+  font-family: "Hiragino Sans", "Yu Gothic UI", "Meiryo", sans-serif;
+}
+
+/*
+  タイルを並べるところ。
+  列数は初期値8列（要件 O-10）。管理画面の「見た目」→「列数」で変えられます。
+*/
+#grid {
+  display: grid;
+  grid-template-columns: repeat(var(--columns, 8), minmax(0, 1fr));
+  gap: 10px;
+  padding: var(--padding, 16px);
+  box-sizing: border-box;
+  zoom: var(--scale, 1);
+}
+
+/* タイル1枚 */
+.tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 4px;
+  padding: 10px 6px;
+  border-radius: 14px;
+  /* タイルの色（黒の半透明）。ルールごとに変えられます */
+  background: var(--bg-color, rgba(20, 20, 30, 0.78));
+  /* タイルのふち */
+  border: 2px solid var(--accent-color, rgba(255, 255, 255, 0.28));
+  color: var(--text-color, #ffffff);
+  text-align: center;
+  overflow: hidden;
+}
+
+/* きっかけのギフトたち */
+.tile-gifts {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+.tile-gifts[hidden] {
+  display: none;
+}
+
+.tile-gift {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  font-size: calc(13px * var(--font-scale, 1));
+  font-weight: 700;
+}
+
+.tile-gift img {
+  width: 26px;
+  height: 26px;
+  object-fit: contain;
+}
+
+.tile-gift-more {
+  opacity: 0.75;
+}
+
+/* ルールの画像 */
+.tile-image {
+  width: 56px;
+  height: 56px;
+  object-fit: contain;
+}
+
+.tile-image[hidden] {
+  display: none;
+}
+
+/* ルールの名前 */
+.tile-name {
+  font-size: calc(15px * var(--font-scale, 1));
+  font-weight: 800;
+  line-height: 1.2;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.7);
+  word-break: break-word;
+}
+
+/* きっかけの説明（「いいね100回ごと」など） */
+.tile-trigger {
+  font-size: calc(12px * var(--font-scale, 1));
+  opacity: 0.8;
+  line-height: 1.2;
+  word-break: break-word;
+}
+
+/* くり返し回数 */
+.tile-repeat {
+  font-size: calc(13px * var(--font-scale, 1));
+  font-weight: 800;
+  color: var(--accent-color, #ffd54a);
+}
+
+.tile-repeat[hidden] {
+  display: none;
+}

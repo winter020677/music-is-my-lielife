@@ -43,6 +43,9 @@ function emptyRule(): Rule {
     name: '新しいルール',
     enabled: true,
     imageUrl: '',
+    tileVisible: true,
+    tileColor: '',
+    tileOrder: 0,
     trigger: { kind: 'gift', giftIds: [], minCoins: 1, likeEvery: 100, keywords: [] },
     repeatPerCount: false,
     cooldownSec: 0,
@@ -419,6 +422,66 @@ function RuleCard({
               />
               ギフトの個数の分だけくり返す（例：バラ5個 → 5回）
             </label>
+          )}
+
+          <h3 className="rule-section">イベント一覧のタイル</h3>
+          <p className="muted small">
+            「イベント一覧」オーバーレイに出すタイルの設定です（視聴者に「何をするとどうなるか」を見せるもの）。
+          </p>
+          <label className="check">
+            <input
+              type="checkbox"
+              checked={rule.tileVisible}
+              onChange={(e) => onChange((r) => ({ ...r, tileVisible: e.target.checked }))}
+            />
+            イベント一覧に出す
+          </label>
+          {rule.tileVisible && (
+            <div className="field-row">
+              <Field label="並び順" hint="小さいほど先。同じなら、このルールの並びの順">
+                <NumberInput
+                  value={rule.tileOrder}
+                  min={-9999}
+                  max={9999}
+                  step={1}
+                  onChange={(v) => onChange((r) => ({ ...r, tileOrder: v }))}
+                />
+              </Field>
+              <Field label="タイルの背景色" hint="空なら style.css のまま">
+                <span className="color-field">
+                  <input
+                    type="color"
+                    value={/^#[0-9a-fA-F]{6}$/.test(rule.tileColor) ? rule.tileColor : '#141420'}
+                    onChange={(e) => onChange((r) => ({ ...r, tileColor: e.target.value }))}
+                  />
+                  <input
+                    value={rule.tileColor}
+                    onChange={(e) => onChange((r) => ({ ...r, tileColor: e.target.value }))}
+                    placeholder="そのまま"
+                  />
+                  {rule.tileColor && (
+                    <button type="button" className="button button-small" onClick={() => onChange((r) => ({ ...r, tileColor: '' }))}>
+                      空に
+                    </button>
+                  )}
+                </span>
+              </Field>
+              <Field label="タイルに出す画像" hint="メディアのファイル名か、http... のURL">
+                <select value={rule.imageUrl} onChange={(e) => onChange((r) => ({ ...r, imageUrl: e.target.value }))}>
+                  <option value="">（なし）</option>
+                  {media
+                    .filter((f) => f.kind === 'image')
+                    .map((f) => (
+                      <option key={f.name} value={f.name}>
+                        {f.name}
+                      </option>
+                    ))}
+                  {rule.imageUrl && !media.some((f) => f.name === rule.imageUrl) && (
+                    <option value={rule.imageUrl}>{rule.imageUrl}</option>
+                  )}
+                </select>
+              </Field>
+            </div>
           )}
 
           <h3 className="rule-section">やること</h3>

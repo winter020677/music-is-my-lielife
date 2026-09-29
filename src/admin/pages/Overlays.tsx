@@ -33,6 +33,15 @@ const OVERLAYS = [
     columns: false,
   },
   {
+    name: 'tiles',
+    title: 'イベント一覧',
+    description:
+      'どのギフトで何が起きるかを、視聴者に見せる一覧です。「ルール」から自動で作られます（ルールごとに 出す・並び順・色 を決められます）。',
+    size: '幅 1920 × 高さ 1080（配信の画面と同じ大きさ）。端に出すなら細長くしてもOK',
+    audio: false,
+    columns: true,
+  },
+  {
     name: 'speech',
     title: '読み上げ（音だけ）',
     description: 'VOICEVOXで作った読み上げの音を鳴らします。画面には何も出ません。',

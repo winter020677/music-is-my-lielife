@@ -129,8 +129,17 @@ export const ruleSchema = z.object({
   id: z.string().min(1).max(60),
   name: str('新しいルール', 100),
   enabled: flag(true),
-  /** 管理画面でルールを見分けるための画像（要件 R-3） */
+  /**
+   * ルールの画像（要件 R-3）。イベント一覧のタイルにも出す（要件 O-10）。
+   * media フォルダのファイル名か、http... / で始まるURL。
+   */
   imageUrl: str('', 500),
+  /** イベント一覧のタイルに出すか（要件 O-10） */
+  tileVisible: flag(true),
+  /** タイル全体の背景色（空なら style.css のまま）（要件 O-10） */
+  tileColor: str('', 40),
+  /** タイルの並び順。小さいほど先。同じなら、このリストの順（要件 O-10） */
+  tileOrder: int(0, -9999, 9999),
   trigger: z.preprocess((v) => (isPlainObject(v) ? v : {}), triggerSchema),
   /** ギフトの個数の分だけ、やることをくり返す（例：バラ5個 → 5回）（要件 R-5） */
   repeatPerCount: flag(false),

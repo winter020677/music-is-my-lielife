@@ -25,9 +25,10 @@ import { BackupManager, copyDatabase } from './db/backup.ts';
 import { DailyCounters } from './db/counters.ts';
 import { openDatabase, type Db } from './db/database.ts';
 import { migrate, pendingMigrations } from './db/migrations.ts';
-import { daySummary } from './db/queries.ts';
+import { daySummary, giftCatalog } from './db/queries.ts';
 import { Recorder, type RuleRunRecord } from './db/recorder.ts';
 import { activeSet, defaultOverlayLook } from './config/rules.ts';
+import { buildTiles } from './actions/tiles.ts';
 import { MediaService } from './actions/media.ts';
 import { SpinnerService } from './actions/spinner.ts';
 import { MediaStore } from './actions/mediaStore.ts';
@@ -431,7 +432,10 @@ export class App {
   private overlaySettings(name: string): Record<string, unknown> {
     const settings = this.settings.get();
     const look = settings.overlays[name] ?? defaultOverlayLook();
-    const own: Record<string, unknown> = name === 'alert' ? { displaySec: settings.alert.displaySec } : {};
+    let own: Record<string, unknown> = {};
+    if (name === 'alert') own = { displaySec: settings.alert.displaySec };
+    // イベント一覧（要件 O-10）は、今のセットのルールから毎回作る
+    if (name === 'tiles') own = { tiles: buildTiles(activeSet(settings.rules)?.rules ?? [], giftCatalog(this.db)) };
     return { ...own, look };
   }
 
