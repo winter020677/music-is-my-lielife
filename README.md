@@ -43,9 +43,9 @@ STE（StreamToEarn）と LiveSpark の機能を1つにまとめる、自分専�
 2. このプロジェクトをダウンロードする。PowerShell（またはClaude Code）で：
    ```
    cd $HOME
-   git clone https://github.com/winter020677/tiktok-live-tool.git
+   git clone https://github.com/winter020677/music-is-my-lielife.git tiktok-live-tool
    ```
-   ※ GitHubでリポジトリの名前を `tiktok-live-tool` に変えた後のURLです（元の名前は music-is-my-lielife）
+   ※ GitHubでリポジトリの名前を変えた後も、このURLのまま使えます（GitHubが新しい名前へ自動で案内するため）
 3. できたフォルダ（例：`C:\Users\あなた\tiktok-live-tool`）の **`setup.bat`** をダブルクリック
    - 必要な部品のダウンロードと、管理画面の準備をします（数分かかります）
    - 終わると、デスクトップに **「TikTok LIVE ツール」** のショートカットができます
