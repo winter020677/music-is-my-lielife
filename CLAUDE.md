@@ -66,7 +66,8 @@ TikTok LIVE配信用の、利用者本人だけが使うツール。STE（Stream
 - 時刻はUTCのISO文字列で保存（D-9）。テストのイベントは日本時間の日付ごとの「テスト用の配信」（`room_id = test-日付`）に入れ、行にも `is_test = 1`（D-8）
 - 配信待ちの確認は TikTok に直接聞く（Euler Stream を使わない）。直接聞けない時だけ、10分以上空けて Euler Stream に聞く。接続1回で Euler Stream を1回使う（`fetchSignedWebSocketFromProvider`）。今日の使用回数は `daily_counters`（UTCの日付）
 - 接続した直後にまとめて届く少し前のデータは、記録するが、60秒以上前のものは演出しない（設定 `records.lateEventSec`）
-- 置き換え記号の `{coins}` は「ギフト1個あたりのコイン数」にした（STEと違ったら直す）
+- 置き換え記号の `{coins}` は「ギフト1個あたりのコイン数」にした。STEの説明（「送られたギフトのコイン数」）では1個あたりか合計かが分からず、利用者も分からないため。合計が欲しい時は `{mult:{coins} {giftcount}}` と書ける。STEのコマンドを移す時に違いが見つかったら直す
+- GitHubのリポジトリ名は `tiktok-live-tool`（元は music-is-my-lielife。名前の変更は利用者がGitHubの設定で行う）
 - 入室は TikTok の member メッセージの action が 1（入室）か 0（不明）のものを数える
 - フェーズ0のギフトの反応は、設定の `phase0.giftReaction`（アラート・Minecraftのコマンド・読み上げ）。フェーズ1でルールの仕組みに移す
 
