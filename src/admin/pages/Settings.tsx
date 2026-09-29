@@ -96,6 +96,29 @@ export function SettingsPage({ state }: { state: AppState }) {
             />
           </Field>
         </div>
+        <h3>サーバーの起動（「Minecraft」画面の起動ボタン）</h3>
+        <Field label="サーバーのフォルダ" hint="Paper の jar と server.properties があるフォルダ。空なら起動ボタンは使いません">
+          <input
+            value={draft.minecraft.serverFolder}
+            onChange={(e) => set('minecraft', 'serverFolder', e.target.value)}
+            placeholder="例：C:\Users\名前\minecraft-server"
+          />
+        </Field>
+        <div className="field-row">
+          <Field label="jarファイルの名前" hint="空ならフォルダの中から自動で探します">
+            <input value={draft.minecraft.jarFile} onChange={(e) => set('minecraft', 'jarFile', e.target.value)} placeholder="例：paper-1.21.4-100.jar" />
+          </Field>
+          <Field label="使うメモリ（GB）" hint="PCのメモリの半分くらいまで">
+            <NumberInput value={draft.minecraft.memoryGb} min={1} max={64} onChange={(v) => set('minecraft', 'memoryGb', v)} />
+          </Field>
+        </div>
+        <Field label="Javaの場所" hint="ふつうは java のまま。Javaが見つからないと言われたら、java.exe の場所を入力します">
+          <input
+            value={draft.minecraft.javaPath}
+            onChange={(e) => set('minecraft', 'javaPath', e.target.value)}
+            placeholder="例：C:\Program Files\Java\jdk-22\bin\java.exe"
+          />
+        </Field>
       </Card>
 
       <VoicevoxCard draft={draft} set={set} />

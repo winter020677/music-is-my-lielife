@@ -207,6 +207,37 @@ export async function createWebServer(app: App): Promise<FastifyInstance> {
     return { ok: true };
   });
 
+  // Minecraftサーバーの起動・停止とコンソール（要件 M-3）
+  server.post('/api/minecraft/server/start', async (_req, reply) => {
+    try {
+      app.minecraftServer.start();
+      return { ok: true };
+    } catch (err) {
+      return reply.code(400).send({ error: describeError(err) });
+    }
+  });
+  server.post('/api/minecraft/server/stop', async () => {
+    // 止まり終わるまで待たずに返す（ワールドの保存に時間がかかるため。状態は画面に届く）
+    void app.minecraftServer.stop();
+    return { ok: true };
+  });
+  server.post('/api/minecraft/server/kill', async () => {
+    await app.minecraftServer.kill();
+    return { ok: true };
+  });
+  server.get('/api/minecraft/server/console', async () => ({ lines: app.minecraftServer.consoleLines() }));
+  const consoleSchema = z.object({ line: z.string().min(1).max(1000) });
+  server.post('/api/minecraft/server/console', async (req, reply) => {
+    const input = parse(consoleSchema, req.body, reply);
+    if (!input) return reply;
+    try {
+      app.minecraftServer.send(input.line);
+      return { ok: true };
+    } catch (err) {
+      return reply.code(400).send({ error: describeError(err) });
+    }
+  });
+
   // 読み上げ
   server.get('/api/voicevox/speakers', async () => {
     try {
