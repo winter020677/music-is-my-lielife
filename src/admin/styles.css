@@ -712,6 +712,17 @@ textarea {
   padding-left: 20px;
 }
 
+/* 「終了」を押した後の画面 */
+.quit-screen {
+  max-width: 640px;
+  margin: 80px auto;
+  padding: 32px;
+  border-radius: 12px;
+  background: #ffffff;
+  border: 1px solid #e1e4eb;
+  text-align: center;
+}
+
 /* ───── 画面がせまい時 ───── */
 @media (max-width: 1200px) {
   .status-row {

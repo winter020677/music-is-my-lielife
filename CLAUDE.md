@@ -33,10 +33,47 @@ TikTok LIVE配信用の、利用者本人だけが使うツール。STE（Stream
 
 ## よく使うコマンド
 
-- （フェーズ0で作ったら、起動・テスト・ビルドのコマンドをここに書く）
+- 初回・更新後のセットアップ（利用者が使う）：`setup.bat`（npm ci → 管理画面のビルド → .env とデスクトップのショートカット作成）
+- 更新（利用者が使う）：`update.bat`（git pull → setup.bat）
+- 起動（利用者が使う）：デスクトップの「TikTok LIVE ツール」＝ `start.vbs`（コンソールなしで `src/server/main.ts --open`）
+- 本体を起動：`npm start`（ファイル変更で自動再起動は `npm run dev`）
+- 管理画面を作る：`npm run build`（開発中は `npm run dev:admin` → http://localhost:5173）
+- 自動テスト：`npm test`　型チェック：`npm run typecheck`
+- 記録を読み取り専用で調べる：`npm run query -- "SELECT ..."`（`--csv` / `--json` も可。表の説明は docs/database.md）
+- TikTokにつながらなくなった時：`npm install tiktok-live-connector@latest` → `npm test` → 実際につながるか確認（README の手順）
+
+## コードの地図
+
+- `src/server/main.ts` 起動の入り口 ／ `src/server/app.ts` 各機能の組み立てとイベントの流れ
+- `src/server/tiktok/` TikTok接続。ライブラリを使うのは `connectorClient.ts` だけ（要件 N-6）。`normalize.ts` がデータの形をそろえる
+  - `liveWatcher.ts` 配信待ち・自動接続・再接続 ／ `eulerUsage.ts` Euler Streamの回数 ／ `giftStreaks.ts` 連打ギフト ／ `pipeline.ts` 二重処理の防止
+- `src/server/db/` 記録。表の構造は `migrations.ts`（変える時は新しい版を**追加**し、docs/database.md も更新）。書き込みは `recorder.ts`
+- `src/server/actions/` オーバーレイ（WebSocket）・Minecraft（RCON）・読み上げ（VOICEVOX）・アラート
+- `src/server/rules/phase0GiftRule.ts` フェーズ0の試作ルール（フェーズ1でルールの仕組みに置き換える）
+- `src/server/core/` 置き換え記号（`template.ts`）・無害化（`sanitize.ts`）・順番待ち（`queue.ts`）など
+- `src/server/web/server.ts` Webサーバーと管理画面のAPI ／ `src/admin/` 管理画面（React）
+- `overlays/` オーバーレイ（素のHTML/CSS/JS。新しいものは `_template` をコピー）
+- `tests/` 自動テスト
+
+## 決まったこと（実装で決めたこと）
+
+- 本体の TypeScript はビルドせず、Node.js の型の読み飛ばし（type stripping）でそのまま動かす。Node.js 22.18 以上（LTS の 24 を推奨）。`enum`・`namespace`・コンストラクタ引数のプロパティなど、読み飛ばせない書き方は使わない（tsconfig の `erasableSyntaxOnly`）。相対 import は `.ts` まで書く
+- SQLite は Node.js に入っている `node:sqlite` を使う（追加のビルドが要らず、Windowsで npm install が失敗しにくいため）
+- データフォルダ（`live.db`・`settings.json`・`logs`・`backups`）は `%LOCALAPPDATA%\TikTokLiveTool`。プロジェクトを消したり取り直したりしても記録が消えないように、プロジェクトの外にした。`.env` の `DATA_DIR` で変更可
+- ポートは 3939。管理画面は `http://127.0.0.1:3939/`、オーバーレイは `http://127.0.0.1:3939/overlay/<名前>/`
+- 管理画面の「アプリ風の独立ウィンドウ」は、Windows 11 に入っている Edge のアプリモード（`--app`）で開く（要件 U-1）
+- 待ち受けは 127.0.0.1 のみ。ログインはないが、Host と Origin を確かめて、他のサイトからの操作を断る
+- 時刻はUTCのISO文字列で保存（D-9）。テストのイベントは日本時間の日付ごとの「テスト用の配信」（`room_id = test-日付`）に入れ、行にも `is_test = 1`（D-8）
+- 配信待ちの確認は TikTok に直接聞く（Euler Stream を使わない）。直接聞けない時だけ、10分以上空けて Euler Stream に聞く。接続1回で Euler Stream を1回使う（`fetchSignedWebSocketFromProvider`）。今日の使用回数は `daily_counters`（UTCの日付）
+- 接続した直後にまとめて届く少し前のデータは、記録するが、60秒以上前のものは演出しない（設定 `records.lateEventSec`）
+- 置き換え記号の `{coins}` は「ギフト1個あたりのコイン数」にした（STEと違ったら直す）
+- 入室は TikTok の member メッセージの action が 1（入室）か 0（不明）のものを数える
+- フェーズ0のギフトの反応は、設定の `phase0.giftReaction`（アラート・Minecraftのコマンド・読み上げ）。フェーズ1でルールの仕組みに移す
 
 ## 進み具合
 
 - 要件定義書：v2（配信データの記録と分析を追加）
-- 今のフェーズ：フェーズ0（試作）未着手
+- 今のフェーズ：フェーズ0（試作）を実装済み。利用者のPCでの確認（短いテスト配信）待ち
+  - クラウド上のClaude Codeで作ったため、本物のTikTok・OBS・Minecraft・VOICEVOXとの確認はまだ（にせもののサーバーを使った自動テストと、画面の表示は確認済み）
+  - 確認の手順は README の「フェーズ0の確認」。結果（入室の通知が届く割合、Euler Streamの使用回数）を要件定義書のフェーズ0に書き足す
 - 決まったこと・分かったことは、このファイルか要件定義書に追記して残す

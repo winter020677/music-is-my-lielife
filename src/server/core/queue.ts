@@ -36,6 +36,7 @@ export class ActionQueue<T> {
   private running: { job: Job<T>; abort: AbortController } | null = null;
   private loopActive = false;
   private lastStartMs = 0;
+  private lastWarning = { text: '', at: 0 };
   private readonly listeners = new Set<() => void>();
 
   constructor(options: {
@@ -125,7 +126,7 @@ export class ActionQueue<T> {
           await this.runJob(job.data, abort.signal);
         } catch (err) {
           error = err;
-          if (!abort.signal.aborted) this.log.warn(`${this.label}「${job.label}」でエラー: ${describeError(err)}`);
+          if (!abort.signal.aborted) this.warnOnce(`${this.label}でエラー: ${describeError(err)}`, job.label);
         }
         this.running = null;
         job.onDone?.(abort.signal.aborted && !error ? new Error('スキップしました') : error);
@@ -134,6 +135,14 @@ export class ActionQueue<T> {
     } finally {
       this.loopActive = false;
     }
+  }
+
+  /** 同じエラーが続く時は、1分に1回だけログに出す（ギフトのたびに同じ注意が並ばないように） */
+  private warnOnce(text: string, jobLabel: string): void {
+    const now = Date.now();
+    if (text === this.lastWarning.text && now - this.lastWarning.at < 60_000) return;
+    this.lastWarning = { text, at: now };
+    this.log.warn(`${text}（${jobLabel}）`);
   }
 
   private changed(): void {

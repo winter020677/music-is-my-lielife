@@ -20,5 +20,5 @@
     "skipLibCheck": true,
     "resolveJsonModule": true
   },
-  "include": ["src/server/**/*.ts", "tests/**/*.ts", "vitest.config.ts"]
+  "include": ["src/server/**/*.ts", "tests/**/*.ts", "tools/**/*.ts", "vitest.config.ts"]
 }

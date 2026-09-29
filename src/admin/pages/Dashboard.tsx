@@ -1,6 +1,7 @@
 // ダッシュボード：配信中に見る画面（要件 U-2）
 // 接続状態・直近のイベント・順番待ちの操作・今日の集計を1画面にまとめる。
 
+import { useState } from 'react';
 import { api, formatDuration, formatNumber, formatTime, type AppState, type DisplayEvent } from '../api.ts';
 import { tiktokTone } from '../App.tsx';
 import { ActionButton, Card, Stat, StatusBadge, type Tone } from '../components/ui.tsx';
@@ -10,9 +11,7 @@ export function Dashboard({ state, events }: { state: AppState; events: DisplayE
     <div className="dashboard">
       <StatusRow state={state} />
       <div className="dashboard-main">
-        <Card title="直近のイベント" className="events-card">
-          <EventList events={events} />
-        </Card>
+        <EventsCard events={events} />
         <div className="dashboard-side">
           <QueueCard state={state} />
           <RuleRunCard state={state} />
@@ -140,6 +139,43 @@ const KIND_TONE: Record<string, string> = {
   subscribe: 'kind-subscribe',
   streamEnd: 'kind-end',
 };
+
+/** いいね・入室は数が多いので、表示するかを選べるようにする（選んだものは覚えておく） */
+function EventsCard({ events }: { events: DisplayEvent[] }) {
+  const [hidden, setHidden] = useState<string[]>(() => {
+    try {
+      return JSON.parse(localStorage.getItem('hiddenKinds') ?? '[]') as string[];
+    } catch {
+      return [];
+    }
+  });
+  const toggle = (kind: string) => {
+    const next = hidden.includes(kind) ? hidden.filter((k) => k !== kind) : [...hidden, kind];
+    setHidden(next);
+    localStorage.setItem('hiddenKinds', JSON.stringify(next));
+  };
+  return (
+    <Card
+      title="直近のイベント"
+      className="events-card"
+      actions={
+        <>
+          {[
+            ['like', 'いいね'],
+            ['join', '入室'],
+          ].map(([kind, label]) => (
+            <label key={kind} className="inline-check">
+              <input type="checkbox" checked={!hidden.includes(kind)} onChange={() => toggle(kind)} />
+              {label}
+            </label>
+          ))}
+        </>
+      }
+    >
+      <EventList events={events.filter((e) => !hidden.includes(e.kind))} />
+    </Card>
+  );
+}
 
 function EventList({ events }: { events: DisplayEvent[] }) {
   if (events.length === 0) {

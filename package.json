@@ -15,7 +15,8 @@
     "build": "vite build --config src/admin/vite.config.ts",
     "typecheck": "tsc -p tsconfig.json && tsc -p src/admin/tsconfig.json",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "query": "node --disable-warning=ExperimentalWarning tools/query.ts"
   },
   "dependencies": {
     "@fastify/static": "^10.1.5",

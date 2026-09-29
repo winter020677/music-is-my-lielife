@@ -22,11 +22,21 @@ type PageId = (typeof PAGES)[number]['id'];
 export function App() {
   const { state, events, connected } = useLiveData();
   const [page, setPage] = useState<PageId>(() => (localStorage.getItem('page') as PageId | null) ?? 'dashboard');
+  const [quit, setQuit] = useState(false);
 
   const choose = (id: PageId) => {
     setPage(id);
     localStorage.setItem('page', id);
   };
+
+  if (quit) {
+    return (
+      <div className="quit-screen">
+        <h1>本体を終了しました</h1>
+        <p>このウィンドウは閉じてかまいません。また使う時は、デスクトップの「TikTok LIVE ツール」をダブルクリックしてください。</p>
+      </div>
+    );
+  }
 
   return (
     <div className="app">
@@ -46,7 +56,8 @@ export function App() {
             confirm="本体を終了すると、配信の記録も止まります。終了しますか？"
             onClick={async () => {
               await api('POST', '/api/app/quit');
-              window.setTimeout(() => window.close(), 500);
+              setQuit(true);
+              window.setTimeout(() => window.close(), 800);
             }}
           >
             終了
