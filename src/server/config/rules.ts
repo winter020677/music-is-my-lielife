@@ -56,6 +56,19 @@ export const actionSchema = z.object({
   alertTitle: str('{nickname}', 200),
   alertMessage: str('{giftname} ×{giftcount}', 200),
 
+  /** media：出すファイルの名前（media フォルダの中。要件 A-1） */
+  mediaFile: str('', 200),
+  /** media：画面の左からの位置（％。真ん中が50） */
+  mediaX: decimal(50, 0, 100),
+  /** media：画面の上からの位置（％。真ん中が50） */
+  mediaY: decimal(50, 0, 100),
+  /** media：大きさ（画面の幅に対する％） */
+  mediaWidth: decimal(40, 1, 100),
+  /** media：音量（0〜1） */
+  mediaVolume: decimal(0.8, 0, 1),
+  /** media：表示する秒数。0なら、動画と音は最後まで／画像は5秒 */
+  mediaDurationSec: decimal(0, 0, 600),
+
   /** minecraft：送るコマンド。複数行書ける（要件 A-2） */
   command: str('', 5000),
   /** minecraft：くり返し回数。{repetition} に入る値でもある */
@@ -70,13 +83,63 @@ export const actionSchema = z.object({
 });
 export type RuleAction = z.infer<typeof actionSchema>;
 
+/** スピナーの項目1つ（要件 S-1・S-2） */
+export const spinnerItemSchema = z.object({
+  id: z.string().min(1).max(60),
+  name: str('新しい項目', 60),
+  /** media フォルダの画像ファイル名（空なら色だけで出す） */
+  image: str('', 200),
+  /** 色（#rrggbb） */
+  color: z.string().regex(/^#[0-9a-fA-F]{6}$/).catch('#4a7cf7'),
+  /** 当たりやすさ。大きいほど当たりやすい */
+  weight: decimal(1, 0, 10_000),
+  /** レア度（1〜5）。オーバーレイの見せ方が変わる */
+  rarity: int(1, 1, 5),
+  /** 当たった時にすること（要件 S-2） */
+  actions: listOf(actionSchema, 20),
+});
+export type SpinnerItem = z.infer<typeof spinnerItemSchema>;
+
+export const spinnerShape = {
+  enabled: flag(false),
+  name: str('スピナー', 60),
+  /** 回っている時間（秒） */
+  spinSec: decimal(4, 0.5, 60),
+  /** 当たりを見せておく時間（秒） */
+  resultSec: decimal(3, 0.5, 60),
+  items: listOf(spinnerItemSchema, 100),
+};
+
+/** 当たりやすさ（重み）に従って1つ選ぶ（要件 S-1） */
+export function pickSpinnerItem(items: SpinnerItem[], random: () => number = Math.random): SpinnerItem | null {
+  const usable = items.filter((item) => item.weight > 0);
+  if (usable.length === 0) return null;
+  const total = usable.reduce((sum, item) => sum + item.weight, 0);
+  let point = random() * total;
+  for (const item of usable) {
+    point -= item.weight;
+    if (point < 0) return item;
+  }
+  // 小数の誤差で最後まで残った時のため
+  return usable[usable.length - 1];
+}
+
 export const ruleSchema = z.object({
   /** ルールを見分けるID。これがない項目は読み込みのときに捨てる */
   id: z.string().min(1).max(60),
   name: str('新しいルール', 100),
   enabled: flag(true),
-  /** 管理画面でルールを見分けるための画像（要件 R-3） */
+  /**
+   * ルールの画像（要件 R-3）。イベント一覧のタイルにも出す（要件 O-10）。
+   * media フォルダのファイル名か、http... / で始まるURL。
+   */
   imageUrl: str('', 500),
+  /** イベント一覧のタイルに出すか（要件 O-10） */
+  tileVisible: flag(true),
+  /** タイル全体の背景色（空なら style.css のまま）（要件 O-10） */
+  tileColor: str('', 40),
+  /** タイルの並び順。小さいほど先。同じなら、このリストの順（要件 O-10） */
+  tileOrder: int(0, -9999, 9999),
   trigger: z.preprocess((v) => (isPlainObject(v) ? v : {}), triggerSchema),
   /** ギフトの個数の分だけ、やることをくり返す（例：バラ5個 → 5回）（要件 R-5） */
   repeatPerCount: flag(false),
@@ -101,6 +164,44 @@ function isPlainObject(value: unknown): value is Record<string, unknown> {
 
 // ギフトの表示名（要件 R-4）は、設定ではなくデータベースの gift_catalog.display_name に持つ。
 // ギフトの名前・アイコン・コイン数と同じ場所にまとまっていた方が探しやすいため。
+
+/**
+ * オーバーレイの見た目（要件 O-6）。
+ *
+ * それぞれの style.css には、読んで分かるように値を直接書いてある（要件 O-7）。
+ * ここで決めた値は、その上から重ねる形で効かせる（overlay-client.js が style を足す）。
+ * 何も変えていなければ、style.css に書いてある値のまま。
+ */
+export const overlayLookShape = {
+  /** 全体の大きさ（％）。100 がそのまま */
+  scale: decimal(100, 10, 400),
+  /** 文字の大きさ（％）。100 がそのまま */
+  fontScale: decimal(100, 10, 400),
+  /** 余白（px）。-1 なら style.css のまま */
+  padding: decimal(-1, -1, 200),
+  /** 文字の色。空なら style.css のまま */
+  textColor: str('', 40),
+  /** 箱の背景の色。空なら style.css のまま */
+  backgroundColor: str('', 40),
+  /** ふちや目立たせる色。空なら style.css のまま */
+  accentColor: str('', 40),
+  /** 何列に並べるか（イベント一覧用）。0 なら style.css のまま */
+  columns: int(0, 0, 24),
+  /** 自分で足すCSS（要件 O-6） */
+  extraCss: str('', 10_000),
+};
+
+export const overlaysShape = z.preprocess(
+  (v) => (isPlainObject(v) ? v : {}),
+  z.record(z.string().max(40), z.object(overlayLookShape)),
+);
+
+export type OverlayLook = z.infer<z.ZodObject<typeof overlayLookShape>>;
+
+/** 何も決めていない時の見た目 */
+export function defaultOverlayLook(): OverlayLook {
+  return z.object(overlayLookShape).parse({});
+}
 
 export const rulesShape = {
   /** 今使っているセットのID（要件 R-7） */

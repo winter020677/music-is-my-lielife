@@ -1,0 +1,65 @@
+/*
+  メディア用オーバーレイの見た目（動画・GIF・画像・効果音）
+  ・位置と大きさは「ルール」画面で決めるので、ここでは決めていません
+  ・見た目（角の丸み・影・出てくる動き）は、値を直接書いています。書き換えてOKです
+  ・var(--名前, 値) のところは、管理画面の「オーバーレイ」→「見た目」でも変えられます
+  ・書き換えたら、管理画面の「オーバーレイ」→「全部を再読み込み」で反映されます
+*/
+
+/* ページ全体：背景は透明（OBSで配信の画面に重ねるため） */
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  overflow: hidden;
+}
+
+#stage {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+}
+
+/*
+  出すもの1つ分の箱。
+  left / top / width は「ルール」画面の設定から、script.js が入れます。
+  transform で、指定した位置が「箱の中心」になるようにしています。
+*/
+.media-box {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  /* 全体の大きさ（管理画面の「オーバーレイ」→「見た目」で変えられます） */
+  zoom: var(--scale, 1);
+  /* ふわっと出てくる動き。いらなければ animation の行を消してください */
+  animation: media-in 0.25s ease-out;
+}
+
+.media-box img,
+.media-box video {
+  display: block;
+  width: 100%;
+  height: auto;
+  /* 角の丸み。四角のままがよければ 0 にしてください */
+  border-radius: 12px;
+  /* 影。いらなければ none にしてください */
+  filter: drop-shadow(0 8px 24px rgba(0, 0, 0, 0.45));
+}
+
+/* 効果音だけの時は、画面に何も出さない */
+.media-audio {
+  width: 0 !important;
+  height: 0;
+  overflow: hidden;
+}
+
+@keyframes media-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.88);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}

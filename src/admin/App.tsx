@@ -8,11 +8,13 @@ import { OverlaysPage } from './pages/Overlays.tsx';
 import { RecordsPage } from './pages/Records.tsx';
 import { RulesPage } from './pages/Rules.tsx';
 import { SettingsPage } from './pages/Settings.tsx';
+import { SpinnerPage } from './pages/Spinner.tsx';
 import { TestPanel } from './pages/TestPanel.tsx';
 
 const PAGES = [
   { id: 'dashboard', label: 'ダッシュボード' },
   { id: 'rules', label: 'ルール' },
+  { id: 'spinner', label: 'スピナー' },
   { id: 'test', label: 'テスト' },
   { id: 'records', label: '記録' },
   { id: 'overlays', label: 'オーバーレイ' },
@@ -78,6 +80,8 @@ export function App() {
           <Dashboard state={state} events={events} />
         ) : page === 'rules' ? (
           <RulesPage state={state} />
+        ) : page === 'spinner' ? (
+          <SpinnerPage state={state} />
         ) : page === 'test' ? (
           <TestPanel state={state} />
         ) : page === 'records' ? (

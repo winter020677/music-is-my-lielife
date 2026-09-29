@@ -17,14 +17,25 @@ export const TRIGGER_LABELS: Record<TriggerKind, string> = {
   comment: 'コメント（キーワード）',
 };
 
-/** やることの種類（要件 6.3。メディア（A-1）とスピナー（A-5）はこの後で足す） */
-export const ACTION_TYPES = ['alert', 'minecraft', 'speech'] as const;
+/** やることの種類（要件 6.3） */
+export const ACTION_TYPES = ['alert', 'media', 'minecraft', 'speech', 'spinner'] as const;
 export type ActionType = (typeof ACTION_TYPES)[number];
 
 export const ACTION_LABELS: Record<ActionType, string> = {
   alert: 'アラートを出す',
+  media: '動画・画像・音を出す',
   minecraft: 'Minecraftのコマンド',
   speech: '読み上げ',
+  spinner: 'スピナーを回す',
+};
+
+/** レア度（5段階）の名前（要件 S-1） */
+export const RARITY_LABELS: Record<number, string> = {
+  1: 'ふつう',
+  2: '少しレア',
+  3: 'レア',
+  4: 'とてもレア',
+  5: '超レア',
 };
 
 /** 置き換え記号の早見表（管理画面の説明用。要件 A-3） */

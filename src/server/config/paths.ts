@@ -25,6 +25,8 @@ export interface AppPaths {
   envFile: string;
   adminDist: string;
   overlaysDir: string;
+  /** 利用者が入れた動画・画像・効果音（要件 A-1）。取り直しで消えないよう、データフォルダに置く */
+  mediaDir: string;
   edgeProfileDir: string;
 }
 
@@ -46,6 +48,7 @@ export function resolvePaths(dataDir: string, projectRoot: string = PROJECT_ROOT
     envFile: join(projectRoot, '.env'),
     adminDist: join(projectRoot, 'dist', 'admin'),
     overlaysDir: join(projectRoot, 'overlays'),
+    mediaDir: join(dataDir, 'media'),
     edgeProfileDir: join(dataDir, 'window'),
   };
 }

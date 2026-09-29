@@ -908,6 +908,95 @@ textarea {
   font-size: 12px;
 }
 
+/* メディアのファイル一覧 */
+.media-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.media-table td {
+  padding: 6px 8px 6px 0;
+  border-bottom: 1px solid #eceef3;
+  vertical-align: middle;
+}
+
+.media-table td:first-child {
+  width: 48px;
+  color: #8a8fa0;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.media-name {
+  width: 100%;
+  word-break: break-all;
+}
+
+.media-table td:last-child {
+  text-align: right;
+  white-space: nowrap;
+}
+
+/* スピナーの項目の色 */
+.item-color {
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid #ffffff;
+  box-shadow: 0 0 0 1px #e1e4eb;
+  flex: none;
+}
+
+/* ダッシュボードの「操作」 */
+.control-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 6px 0;
+  border-bottom: 1px solid #eceef3;
+}
+
+.control-row:last-child {
+  border-bottom: 0;
+}
+
+.control-label {
+  width: 104px;
+  flex: none;
+  font-size: 12px;
+  color: #8a8fa0;
+}
+
+/* オーバーレイの「見た目」を開いたところ */
+.look-box {
+  margin-top: 12px;
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid #e1e4eb;
+  background: #f6f7fa;
+}
+
+.color-field {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.color-field input[type='color'] {
+  width: 36px;
+  height: 30px;
+  padding: 2px;
+  flex: none;
+}
+
+.color-field input[type='text'],
+.color-field input:not([type]) {
+  flex: 1;
+  min-width: 0;
+}
+
 /* ───── 画面がせまい時 ───── */
 @media (max-width: 1200px) {
   .status-row {

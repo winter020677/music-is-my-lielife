@@ -14,6 +14,8 @@
 // 接続し直した時に、昔のギフトで演出が出ないようにするため。
 
 import type { AlertService } from '../actions/alerts.ts';
+import type { MediaService } from '../actions/media.ts';
+import type { SpinnerService } from '../actions/spinner.ts';
 import type { MinecraftService } from '../actions/minecraft/service.ts';
 import type { SpeechService } from '../actions/voicevox.ts';
 import { activeSet, type Rule, type RuleAction } from '../config/rules.ts';
@@ -98,6 +100,8 @@ export class LikeProgress {
 export interface RuleEngineDeps {
   getSettings: () => Settings;
   alerts: AlertService;
+  media: MediaService;
+  spinner: SpinnerService;
   minecraft: MinecraftService;
   speech: SpeechService;
   onRun: (run: RuleRunRecord) => void;
@@ -124,6 +128,54 @@ export class RuleEngine {
       setTimeout(fn, ms);
     });
     this.now = deps.now ?? Date.now;
+  }
+
+  /**
+   * 管理画面の「テスト」ボタン（要件 U-4）。
+   * きっかけやクールダウンを見ずに、そのルールの「やること」を動かす。
+   * actionIndex を渡すと、その1つだけを動かす。
+   */
+  testActions(actions: RuleAction[], event: LiveEvent, label: string, actionIndex: number | null): void {
+    const settings = this.deps.getSettings();
+    const chosen = actionIndex === null ? actions : actions[actionIndex] ? [actions[actionIndex]] : [];
+    const run = new RunTracker((done, errors) => {
+      this.deps.onRun({
+        at: event.at,
+        isTest: true,
+        ruleId: 'test',
+        ruleName: `テスト：${label}`,
+        triggerKind: 'test',
+        triggerViewer: 'viewer' in event ? event.viewer : null,
+        triggerDetail: null,
+        actions: done,
+        result:
+          done.length === 0 ? 'skipped' : errors.length === 0 ? 'ok' : errors.length === done.length ? 'error' : 'partial',
+        message: errors.length > 0 ? errors.join(' / ') : null,
+      });
+    });
+    for (const action of chosen) this.runOneAction(action, event, settings, `テスト：${label}`, run);
+    run.close();
+  }
+
+  /** 管理画面のボタンから手動で回す（要件 U-2）。当たった項目の「やること」も動く */
+  spinManually(event: LiveEvent): void {
+    const settings = this.deps.getSettings();
+    const run = new RunTracker((actions, errors) => {
+      this.deps.onRun({
+        at: event.at,
+        isTest: event.isTest,
+        ruleId: 'spinner:manual',
+        ruleName: 'スピナー（手動）',
+        triggerKind: 'manual',
+        triggerViewer: null,
+        triggerDetail: null,
+        actions,
+        result: errors.length === 0 ? 'ok' : 'error',
+        message: errors.length > 0 ? errors.join(' / ') : null,
+      });
+    });
+    this.runSpinner(false, event, settings, '手動で回す', run);
+    run.close();
   }
 
   /** 配信が変わったら、1回だけの制限といいねの数え直しをする */
@@ -205,19 +257,7 @@ export class RuleEngine {
       });
     });
 
-    for (const action of rule.actions) {
-      switch (action.type) {
-        case 'alert':
-          this.runAlert(action, event, display, label, run);
-          break;
-        case 'minecraft':
-          this.runMinecraft(action, event, settings, label, run);
-          break;
-        case 'speech':
-          this.runSpeech(action, event, settings, label, run);
-          break;
-      }
-    }
+    for (const action of rule.actions) this.runOneAction(action, event, settings, label, run);
     run.close();
   }
 
@@ -235,6 +275,22 @@ export class RuleEngine {
       },
       label,
       { priority: action.priority, onDone: run.add('overlay') },
+    );
+  }
+
+  private runMedia(action: RuleAction, label: string, run: RunTracker): void {
+    if (!action.mediaFile.trim()) return;
+    this.deps.media.enqueue(
+      {
+        file: action.mediaFile,
+        x: action.mediaX,
+        y: action.mediaY,
+        width: action.mediaWidth,
+        volume: action.mediaVolume,
+        durationSec: action.mediaDurationSec,
+      },
+      label,
+      { priority: action.priority, onDone: run.add('media') },
     );
   }
 
@@ -270,6 +326,70 @@ export class RuleEngine {
     if (!settings.voicevox.enabled || !action.text.trim()) return;
     const text = renderTemplate(action.text, templateVars(event, settings, 'speech'));
     this.deps.speech.speak(text, label, run.add('speech'));
+  }
+
+  /**
+   * スピナーを回す（要件 A-5）。
+   * 当たった項目の「やること」（要件 S-2）は、回り終わってから動かす。
+   * その分は別の記録にする（回るまでに時間があるため、元の発動と同じ記録にはしない）。
+   */
+  private runSpinner(priority: boolean, event: LiveEvent, settings: Settings, label: string, run: RunTracker): void {
+    this.deps.spinner.enqueue(
+      {
+        onResult: (item) => {
+          const itemRun = new RunTracker((actions, errors) => {
+            this.deps.onRun({
+              at: new Date().toISOString(),
+              isTest: event.isTest,
+              ruleId: `spinner:${item.id}`,
+              ruleName: `スピナーの当たり：${item.name}`,
+              triggerKind: 'spinner',
+              triggerViewer: 'viewer' in event ? event.viewer : null,
+              triggerDetail: item.name,
+              actions,
+              result:
+                actions.length === 0
+                  ? 'skipped'
+                  : errors.length === 0
+                    ? 'ok'
+                    : errors.length === actions.length
+                      ? 'error'
+                      : 'partial',
+              message: errors.length > 0 ? errors.join(' / ') : null,
+            });
+          });
+          // 当たりの中のスピナーは回さない（回り続けてしまうため）
+          for (const inner of item.actions) {
+            if (inner.type === 'spinner') continue;
+            this.runOneAction(inner, event, settings, `${item.name}`, itemRun);
+          }
+          itemRun.close();
+        },
+      },
+      label,
+      { priority, onDone: run.add('spinner') },
+    );
+  }
+
+  /** やること1つを動かす */
+  private runOneAction(action: RuleAction, event: LiveEvent, settings: Settings, label: string, run: RunTracker): void {
+    switch (action.type) {
+      case 'alert':
+        this.runAlert(action, event, templateVars(event, settings, 'display'), label, run);
+        break;
+      case 'media':
+        this.runMedia(action, label, run);
+        break;
+      case 'minecraft':
+        this.runMinecraft(action, event, settings, label, run);
+        break;
+      case 'speech':
+        this.runSpeech(action, event, settings, label, run);
+        break;
+      case 'spinner':
+        this.runSpinner(action.priority, event, settings, label, run);
+        break;
+    }
   }
 }
 

@@ -7,19 +7,26 @@ import { useEffect, useMemo, useState } from 'react';
 import { api, type AppState, type Settings } from '../api.ts';
 import { ActionButton, Card, Field } from '../components/ui.tsx';
 import {
+  ActionEditor,
+  MediaLibraryCard,
+  NumberInput,
+  emptyAction,
+  loadMedia,
+  newId,
+  type MediaFileRow,
+} from '../components/actions.tsx';
+import {
   ACTION_LABELS,
   ACTION_TYPES,
   TEMPLATE_HINTS,
   TRIGGER_KINDS,
   TRIGGER_LABELS,
-  type ActionType,
   type TriggerKind,
 } from '../../server/config/ruleLabels.ts';
 
 type RulesConfig = Settings['rules'];
 type RuleSet = RulesConfig['sets'][number];
 type Rule = RuleSet['rules'][number];
-type RuleAction = Rule['actions'][number];
 
 export interface GiftRow {
   gift_id: string;
@@ -30,31 +37,15 @@ export interface GiftRow {
   streakable: number | null;
 }
 
-/** 新しいIDを作る */
-function newId(prefix: string): string {
-  return `${prefix}-${Date.now().toString(36)}-${Math.floor(Math.random() * 1e6).toString(36)}`;
-}
-
-function emptyAction(type: ActionType): RuleAction {
-  return {
-    type,
-    priority: false,
-    alertTitle: '{nickname}',
-    alertMessage: '{giftname} ×{giftcount}',
-    command: '',
-    repeat: 1,
-    delaySec: 0,
-    intervalSec: 0,
-    text: '',
-  };
-}
-
 function emptyRule(): Rule {
   return {
     id: newId('rule'),
     name: '新しいルール',
     enabled: true,
     imageUrl: '',
+    tileVisible: true,
+    tileColor: '',
+    tileOrder: 0,
     trigger: { kind: 'gift', giftIds: [], minCoins: 1, likeEvery: 100, keywords: [] },
     repeatPerCount: false,
     cooldownSec: 0,
@@ -67,6 +58,8 @@ export function RulesPage({ state }: { state: AppState }) {
   const [draft, setDraft] = useState<RulesConfig>(state.settings.rules);
   const [saved, setSaved] = useState<string | null>(null);
   const [gifts, setGifts] = useState<GiftRow[]>([]);
+  const [media, setMedia] = useState<MediaFileRow[]>([]);
+  const [mediaFolder, setMediaFolder] = useState('');
   const dirty = JSON.stringify(draft) !== JSON.stringify(state.settings.rules);
 
   // 保存していない変更がなければ、本体の設定に合わせる
@@ -78,6 +71,10 @@ export function RulesPage({ state }: { state: AppState }) {
     void api<{ gifts: GiftRow[] }>('GET', '/api/gifts/catalog')
       .then((res) => setGifts(res.gifts))
       .catch(() => setGifts([]));
+    void loadMedia().then((res) => {
+      setMedia(res.files);
+      setMediaFolder(res.folder);
+    });
   }, []);
 
   const set = draft.sets.find((s) => s.id === draft.activeSetId) ?? draft.sets[0] ?? null;
@@ -141,6 +138,8 @@ export function RulesPage({ state }: { state: AppState }) {
               key={rule.id}
               rule={rule}
               gifts={gifts}
+              media={media}
+              saved={!dirty}
               position={i + 1}
               total={set.rules.length}
               onChange={(fn) => updateRule(rule.id, fn)}
@@ -171,6 +170,8 @@ export function RulesPage({ state }: { state: AppState }) {
           </div>
         </>
       )}
+
+      <MediaLibraryCard files={media} folder={mediaFolder} onChange={setMedia} />
 
       <Card title="置き換え記号">
         <p className="muted small">
@@ -270,6 +271,8 @@ function SetBar({
 function RuleCard({
   rule,
   gifts,
+  media,
+  saved,
   position,
   total,
   onChange,
@@ -279,6 +282,9 @@ function RuleCard({
 }: {
   rule: Rule;
   gifts: GiftRow[];
+  media: MediaFileRow[];
+  /** 保存済みか。保存していないと、本体はまだ新しい中身を知らないのでテストできない */
+  saved: boolean;
   position: number;
   total: number;
   onChange: (fn: (r: Rule) => Rule) => void;
@@ -322,6 +328,13 @@ function RuleCard({
           <button type="button" className="button button-small" disabled={position === total} onClick={() => onMove(1)}>
             ↓
           </button>
+          <ActionButton
+            kind="small"
+            disabled={!saved || rule.actions.length === 0}
+            onClick={() => api('POST', '/api/rules/test', { kind: 'rule', id: rule.id, actionIndex: null })}
+          >
+            試す
+          </ActionButton>
           <button type="button" className="button button-small" onClick={() => setOpen((v) => !v)}>
             {open ? '閉じる' : '開く'}
           </button>
@@ -411,13 +424,76 @@ function RuleCard({
             </label>
           )}
 
+          <h3 className="rule-section">イベント一覧のタイル</h3>
+          <p className="muted small">
+            「イベント一覧」オーバーレイに出すタイルの設定です（視聴者に「何をするとどうなるか」を見せるもの）。
+          </p>
+          <label className="check">
+            <input
+              type="checkbox"
+              checked={rule.tileVisible}
+              onChange={(e) => onChange((r) => ({ ...r, tileVisible: e.target.checked }))}
+            />
+            イベント一覧に出す
+          </label>
+          {rule.tileVisible && (
+            <div className="field-row">
+              <Field label="並び順" hint="小さいほど先。同じなら、このルールの並びの順">
+                <NumberInput
+                  value={rule.tileOrder}
+                  min={-9999}
+                  max={9999}
+                  step={1}
+                  onChange={(v) => onChange((r) => ({ ...r, tileOrder: v }))}
+                />
+              </Field>
+              <Field label="タイルの背景色" hint="空なら style.css のまま">
+                <span className="color-field">
+                  <input
+                    type="color"
+                    value={/^#[0-9a-fA-F]{6}$/.test(rule.tileColor) ? rule.tileColor : '#141420'}
+                    onChange={(e) => onChange((r) => ({ ...r, tileColor: e.target.value }))}
+                  />
+                  <input
+                    value={rule.tileColor}
+                    onChange={(e) => onChange((r) => ({ ...r, tileColor: e.target.value }))}
+                    placeholder="そのまま"
+                  />
+                  {rule.tileColor && (
+                    <button type="button" className="button button-small" onClick={() => onChange((r) => ({ ...r, tileColor: '' }))}>
+                      空に
+                    </button>
+                  )}
+                </span>
+              </Field>
+              <Field label="タイルに出す画像" hint="メディアのファイル名か、http... のURL">
+                <select value={rule.imageUrl} onChange={(e) => onChange((r) => ({ ...r, imageUrl: e.target.value }))}>
+                  <option value="">（なし）</option>
+                  {media
+                    .filter((f) => f.kind === 'image')
+                    .map((f) => (
+                      <option key={f.name} value={f.name}>
+                        {f.name}
+                      </option>
+                    ))}
+                  {rule.imageUrl && !media.some((f) => f.name === rule.imageUrl) && (
+                    <option value={rule.imageUrl}>{rule.imageUrl}</option>
+                  )}
+                </select>
+              </Field>
+            </div>
+          )}
+
           <h3 className="rule-section">やること</h3>
+          {!saved && <p className="muted small">※「試す」は、保存してから押せます。</p>}
           {rule.actions.length === 0 && <p className="muted small">まだ何もありません。下のボタンで追加してください。</p>}
           {rule.actions.map((action, i) => (
             <ActionEditor
               key={i}
               action={action}
+              media={media}
               position={i + 1}
+              test={saved ? { kind: 'rule', id: rule.id, index: i } : null}
               onChange={(fn) =>
                 onChange((r) => ({ ...r, actions: r.actions.map((a, j) => (j === i ? fn(a) : a)) }))
               }
@@ -447,82 +523,6 @@ function RuleCard({
         </>
       )}
     </Card>
-  );
-}
-
-function ActionEditor({
-  action,
-  position,
-  onChange,
-  onDelete,
-}: {
-  action: RuleAction;
-  position: number;
-  onChange: (fn: (a: RuleAction) => RuleAction) => void;
-  onDelete: () => void;
-}) {
-  const set = <K extends keyof RuleAction>(key: K, value: RuleAction[K]) => onChange((a) => ({ ...a, [key]: value }));
-
-  return (
-    <div className="action-box">
-      <div className="action-box-head">
-        <strong>
-          {position}. {ACTION_LABELS[action.type as ActionType]}
-        </strong>
-        <label className="check check-inline">
-          <input type="checkbox" checked={action.priority} onChange={(e) => set('priority', e.target.checked)} />
-          割り込み（順番待ちを追い越す）
-        </label>
-        <button type="button" className="button button-small" onClick={onDelete}>
-          消す
-        </button>
-      </div>
-
-      {action.type === 'alert' && (
-        <div className="field-row">
-          <Field label="大きい文字">
-            <input value={action.alertTitle} onChange={(e) => set('alertTitle', e.target.value)} />
-          </Field>
-          <Field label="小さい文字">
-            <input value={action.alertMessage} onChange={(e) => set('alertMessage', e.target.value)} />
-          </Field>
-        </div>
-      )}
-
-      {action.type === 'minecraft' && (
-        <>
-          <Field label="コマンド（1行に1つ）" hint="設定の「Minecraftを使う」が入っている時だけ動きます">
-            <textarea
-              rows={3}
-              value={action.command}
-              onChange={(e) => set('command', e.target.value)}
-              placeholder="例：execute at {playername} run summon zombie ~{random:-3 3} ~ ~{random:-3 3}"
-            />
-          </Field>
-          <div className="field-row">
-            <Field label="くり返し回数" hint="{repetition} に入る値。何回目かは {index}">
-              <NumberInput value={action.repeat} min={1} max={1000} onChange={(v) => set('repeat', v)} />
-            </Field>
-            <Field label="送り始めるまでの待ち時間（秒）">
-              <NumberInput value={action.delaySec} min={0} max={600} step={0.5} onChange={(v) => set('delaySec', v)} />
-            </Field>
-            <Field label="くり返しの間隔（秒）">
-              <NumberInput value={action.intervalSec} min={0} max={600} step={0.5} onChange={(v) => set('intervalSec', v)} />
-            </Field>
-          </div>
-        </>
-      )}
-
-      {action.type === 'speech' && (
-        <Field label="読み上げる文" hint="設定の「読み上げを使う」が入っている時だけ動きます">
-          <input
-            value={action.text}
-            onChange={(e) => set('text', e.target.value)}
-            placeholder="例：{nickname}さん、{giftname}ありがとう"
-          />
-        </Field>
-      )}
-    </div>
   );
 }
 
@@ -598,33 +598,5 @@ function GiftPicker({
         )}
       </div>
     </Field>
-  );
-}
-
-function NumberInput({
-  value,
-  min,
-  max,
-  step = 1,
-  onChange,
-}: {
-  value: number;
-  min: number;
-  max: number;
-  step?: number;
-  onChange: (value: number) => void;
-}) {
-  return (
-    <input
-      type="number"
-      value={value}
-      min={min}
-      max={max}
-      step={step}
-      onChange={(e) => {
-        const n = Number(e.target.value);
-        if (Number.isFinite(n)) onChange(n);
-      }}
-    />
   );
 }
